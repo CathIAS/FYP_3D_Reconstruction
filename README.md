@@ -5,4 +5,4 @@ Dense 3D Reconstruction from UAV camera images.
 Collaborative Final Year Project by Wenxin Liu and Xuelai Sun. HKUST.
 
 Nect Objectives:
-ROS node map, Camera calibration
+ROS node map, camera calibration
