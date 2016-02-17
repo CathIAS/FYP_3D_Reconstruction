@@ -4,4 +4,5 @@ Dense 3D Reconstruction from UAV camera images.
 
 Collaborative Final Year Project by Wenxin Liu and Xuelai Sun. HKUST.
 
-# TODO: camera calibration, integration into ROS
+# TODO (code): read images & feature detection
+# TODO: camera calibration
