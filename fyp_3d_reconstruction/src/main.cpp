@@ -1,6 +1,7 @@
 #include "ros/ros.h"
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
 
 #include <iostream>
 
@@ -18,7 +19,8 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-    Mat img[n]; // stores original images
+    Mat img[n];  // stores original images
+    Mat img_dist[n];  // stores undistorted images
 
     /* --------------------- Specifies executable usage --------------------- */
     if(argc != 3)
@@ -48,10 +50,26 @@ int main(int argc, char** argv)
         else 
             return -1;
 
-        /* TODO Undistortion with cam parameters */
-        /* TODO SURF detector for features */
+        /* Undistortion with cam parameters */
+        for (int i=0; i<m; i++)
+            undistort(img[i], img_dist[i], camIntrinsic, dist);
 
+        /* Show image */
+        for (int i=0; i<m; i++)
+        {
+            stringstream ss;  // turn int to string
+            ss << i+1;
+            namedWindow("Undistorted Image"+ss.str(), WINDOW_NORMAL);  // adjust display window size
+            imshow("Undistorted Image"+ss.str(),img_dist[i]);  // show image in the window. "Image1"
+            waitKey();
+        }
+        
+        /* TODO SURF detector for features and matching */
+        /* Input: Mat img_dist[n]; Output:vector<point2f> points1, points2. Arrays of matched points in two images correspondingly. Coordinates in floating points format. */
         /* THINK: how to arrange the code to do matching, as the match needs to be done 2 by 2 in order. (k-1, k) > (k, k+1) > ... It might be best to write SURF and matching as individual functions that can be called in main. */
+
+        /* TODO find fundamental matrices and essential matrices */
+        /* Input: vector<point2f> points1, points2; Output: Mat F & E */
 
     }
 

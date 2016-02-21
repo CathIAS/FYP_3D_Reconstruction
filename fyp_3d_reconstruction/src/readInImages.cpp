@@ -61,13 +61,6 @@ int loadImages(Mat img[], vector<string> &filenames, const string &folder, int &
             cerr << "Problem loading image!" << endl;
             return -1;
         }
-
-        /* Show image */
-        stringstream ss;  // turn int to string
-        ss << i+1;
-        namedWindow("Image"+ss.str(), WINDOW_NORMAL);  // adjust display window size
-        imshow("Image"+ss.str(),img[i]);  // show image in the window. "Image1"
-        waitKey();
     }
     return 0;
 }
