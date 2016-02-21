@@ -64,9 +64,12 @@ int main(int argc, char** argv)
             waitKey();
         }
         
-        /* TODO SURF detector for features */
-
+        /* TODO SURF detector for features and matching */
+        /* Input: Mat img_dist[n]; Output:vector<point2f> points1, points2. Arrays of matched points in two images correspondingly. Coordinates in floating points format. */
         /* THINK: how to arrange the code to do matching, as the match needs to be done 2 by 2 in order. (k-1, k) > (k, k+1) > ... It might be best to write SURF and matching as individual functions that can be called in main. */
+
+        /* TODO find fundamental matrices and essential matrices */
+        /* Input: vector<point2f> points1, points2; Output: Mat F & E */
 
     }
 
