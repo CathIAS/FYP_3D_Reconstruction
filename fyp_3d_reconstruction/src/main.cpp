@@ -1,16 +1,16 @@
 #include "ros/ros.h"
-#include "opencv2/core/core.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/core.hpp"
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
 
 #include <iostream>
 
 #include "global.h"
 #include "readInImages.h"
+#include "surf.h"
 
-using namespace cv;
 using namespace std;
-
+using namespace cv;
 /***********************************************/
 
 /*                    Main                     */
@@ -20,8 +20,8 @@ using namespace std;
 int main(int argc, char** argv)
 {
     Mat img[n];  // stores original images
-    Mat img_dist[n];  // stores undistorted images
-
+    Mat img_undist[n];  // stores undistorted images
+	vector< DMatch > good_matches;//stores matches
     /* --------------------- Specifies executable usage --------------------- */
     if(argc != 3)
     {
@@ -52,7 +52,7 @@ int main(int argc, char** argv)
 
         /* Undistortion with cam parameters */
         for (int i=0; i<m; i++)
-            undistort(img[i], img_dist[i], camIntrinsic, dist);
+            undistort(img[i], img_undist[i], camIntrinsic, dist);
 
         /* Show image */
         for (int i=0; i<m; i++)
@@ -60,12 +60,15 @@ int main(int argc, char** argv)
             stringstream ss;  // turn int to string
             ss << i+1;
             namedWindow("Undistorted Image"+ss.str(), WINDOW_NORMAL);  // adjust display window size
-            imshow("Undistorted Image"+ss.str(),img_dist[i]);  // show image in the window. "Image1"
+            imshow("Undistorted Image"+ss.str(),img_undist[i]);  // show image in the window. "Image1"
             waitKey();
         }
         
-        /* TODO SURF detector for features and matching */
-        /* Input: Mat img_dist[n]; Output:vector<point2f> points1, points2. Arrays of matched points in two images correspondingly. Coordinates in floating points format. */
+        /* SURF detector for features and matching*/
+        surf(img_undist,good_matches);
+
+        
+        /* Input: Mat img_undist[n]; Output:vector<point2f> points1, points2. Arrays of matched points in two images correspondingly. Coordinates in floating points format. */
         /* THINK: how to arrange the code to do matching, as the match needs to be done 2 by 2 in order. (k-1, k) > (k, k+1) > ... It might be best to write SURF and matching as individual functions that can be called in main. */
 
         /* TODO find fundamental matrices and essential matrices */
