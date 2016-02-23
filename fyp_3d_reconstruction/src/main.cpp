@@ -11,6 +11,7 @@
 
 using namespace std;
 using namespace cv;
+
 /***********************************************/
 
 /*                    Main                     */
@@ -21,7 +22,7 @@ int main(int argc, char** argv)
 {
     Mat img[n];  // stores original images
     Mat img_undist[n];  // stores undistorted images
-	vector< DMatch > good_matches;//stores matches
+	vector< DMatch > good_matches;  //stores matches
     /* --------------------- Specifies executable usage --------------------- */
     if(argc != 3)
     {

@@ -1,5 +1,8 @@
-#include "opencv2/core/core.hpp"
-#include "opencv2/highgui/highgui.hpp"
+#ifndef READINIMAGES_H
+#define READINIMAGES_H
+
+#include "opencv2/core.hpp"
+#include "opencv2/highgui.hpp"
 
 #include <iostream>
 #include <dirent.h>  // for reading files from path
@@ -20,4 +23,6 @@ void readFilenames(vector<string> &filenames, const string &directory);
 
 /* Load images with filenames */
 int loadImages(Mat img[], vector<string> &filenames, const string &folder, int &m);
+
+#endif /* READINIMAGES_H */
 
