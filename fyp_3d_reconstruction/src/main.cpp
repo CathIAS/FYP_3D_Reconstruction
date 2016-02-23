@@ -66,7 +66,7 @@ int main(int argc, char** argv)
         }
         
         /* SURF detector for features and matching*/
-        surf(img_undist,good_matches);
+        surf(img_undist, good_matches);
 
         
         /* Input: Mat img_undist[n]; Output:vector<point2f> points1, points2. Arrays of matched points in two images correspondingly. Coordinates in floating points format. */
