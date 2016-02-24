@@ -8,7 +8,7 @@ Project Milestones & Meeting Records.
 - 2015-16 Spring Semester
 - Author: Wenxin Liu
 
-## 2016-02-15 ##
+############ 2016-02-15 ##############
 Meeting with Xuelai
 
 Plan discussion:
@@ -36,5 +36,38 @@ Division and Cooperation:
 Base: Github
 Shared programming
 Program efficiency test by Xuelai
+
+############ 2016-02-23 ############
+Meeting with Shen and Xuelai
+
+Questions:
+1. How to go from Sparse to dense
+A: Do rectification on a stereo pair of images s.t. their epipolar lines are horizontal. (2D -> 1D search). Take one feature in the first image and search for match in the second on epipolar line. Need to be the only match.
+
+2. GPU programming
+A: OpenCV has a library in C. A namespace. Recommended personnels: Ling Yonggen, Yang Zhenfei.
+
+3. VO on multiple images. Compare in 2-by-2 way?
+A: Fix one image and search for features. Then match all images with the chosen image.
+
+4. Need for GPS?
+A: With GPS at this stage.
+
+############ 2016-02-24 ############
+Meeting with Shen
+
+Questions:
+1. How to detect loop closure
+A: Simplify front-end problem at this stage. No loop closures, no data structure. E.g. Take 10 images next to each other and use the middle image.
+
+2. Do RANSAC for all pairs of images that used surf?
+A: Yes.
+
+3. Initial values of 3D points coordinates comes from the first two images?
+A: Yes. Use 2D to 2D projection in the first match, and use 3D to 2D projection for future matching. It preserves the scale for other images.
+
+4. Real time BA?
+A: Pass.
+
 
 
