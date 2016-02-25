@@ -1,20 +1,21 @@
 #include "surf.h"
 
-void surf(Mat img_undist[],vector< DMatch >& good_matches)
+//bool cmpMatch(DMatch d1,DMatch d2){ return d1.};
+
+void surf(Mat img_undist[],vector< DMatch >& good_matches,vector< Point2f >& points_1,vector< Point2f >& points_2,const int hessian,const int idx_1,const int idx_2,Mat& img_matches)
 {
     vector<KeyPoint> keypoints_1,keypoints_2;
     Mat gimg_1;
     Mat gimg_2;
-    cv::cvtColor(img_undist[7], gimg_1, cv::COLOR_BGR2GRAY);            
-    cv::cvtColor(img_undist[8], gimg_2, cv::COLOR_BGR2GRAY);            
+    cv::cvtColor(img_undist[idx_1], gimg_1, cv::COLOR_BGR2GRAY);            
+    cv::cvtColor(img_undist[idx_2], gimg_2, cv::COLOR_BGR2GRAY);            
 
     if( !gimg_1.data || !gimg_2.data )
     { std::cout<< " --(!) Error reading images " << std::endl;  }
 
     //-- Step 1: Detect the keypoints using SURF Detector
-    int minHessian = 400;
 
-    Ptr<SURF> detector = SURF::create( minHessian );
+    Ptr<SURF> detector = SURF::create( hessian );
     detector->detect( gimg_1, keypoints_1);
     detector->detect( gimg_2, keypoints_2);
 
@@ -45,21 +46,21 @@ void surf(Mat img_undist[],vector< DMatch >& good_matches)
         drawMatches( gimg_1, keypoints_1, gimg_2, keypoints_2, matches, img_matches );
         */
 
-    //-- Draw only "good" matches
+    //only "good" matches
     for( int i = 0; i < descriptors_1.rows; i++ )
     { if( matches[i].distance <= max(2*min_dist, 0.02) )
         { good_matches.push_back( matches[i]); }
     }
-
-    Mat img_matches;
-    drawMatches( gimg_1, keypoints_1, gimg_2, keypoints_2,good_matches, img_matches);
-
-    //-- Show detected matches
-
-    namedWindow("Matches", CV_WINDOW_NORMAL);
-    imshow("Matches", img_matches);
-
-    waitKey();
-
+	//sort the matches from mindis to maxdis
+	sort(good_matches.begin(),good_matches.end());
+	//convert the matches into points coordinates
+	for(size_t i = 0; i < good_matches.size(); i++)
+	{
+    points_1.push_back(keypoints_1[good_matches[i].queryIdx].pt);
+    points_2.push_back(keypoints_2[good_matches[i].trainIdx].pt);
+	}
+	
+	drawMatches( gimg_1, keypoints_1, gimg_2, keypoints_2,good_matches, img_matches);
+    
 }
 

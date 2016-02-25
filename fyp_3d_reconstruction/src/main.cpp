@@ -22,7 +22,9 @@ int main(int argc, char** argv)
 {
     Mat img[n];  // stores original images
     Mat img_undist[n];  // stores undistorted images
-	vector< DMatch > good_matches;  //stores matches
+    vector< DMatch > good_matches;  //stores matches for drawing
+	vector< Point2f > points_1, points_2;  //stores coordinates of match point
+	Mat img_matches;  //img out with matches
     /* --------------------- Specifies executable usage --------------------- */
     if(argc != 3)
     {
@@ -66,9 +68,17 @@ int main(int argc, char** argv)
         }
         
         /* SURF detector for features and matching*/
-        surf(img_undist, good_matches);
-
+        surf(img_undist,good_matches,points_1,points_2,400,7,8,img_matches);
         
+				//-- Show good matches
+				namedWindow("Good Matches", CV_WINDOW_NORMAL);
+				imshow("Good Matches", img_matches);
+				//print out coordinates
+					cout<<"Total "<<points_1.size()<<" "<<"points have been found"<<endl;
+				for(int i=0;i<points_1.size();i++){
+					cout<<"x = "<<points_1[i]<<"	"<<"y = "<<points_2[i]<<endl;
+				}
+				waitKey();
         /* Input: Mat img_undist[n]; Output:vector<point2f> points1, points2. Arrays of matched points in two images correspondingly. Coordinates in floating points format. */
         /* THINK: how to arrange the code to do matching, as the match needs to be done 2 by 2 in order. (k-1, k) > (k, k+1) > ... It might be best to write SURF and matching as individual functions that can be called in main. */
 
