@@ -59,8 +59,10 @@ void surf(Mat img_undist[],vector< DMatch >& good_matches,vector< Point2f >& poi
     points_1.push_back(keypoints_1[good_matches[i].queryIdx].pt);
     points_2.push_back(keypoints_2[good_matches[i].trainIdx].pt);
 	}
-	
-	drawMatches( gimg_1, keypoints_1, gimg_2, keypoints_2,good_matches, img_matches);
+
+    Mat mask;
+    Scalar color = Scalar::all(-1);
+	drawMatches( gimg_1, keypoints_1, gimg_2, keypoints_2, good_matches, img_matches, color, color, mask, 2);
     
 }
 
