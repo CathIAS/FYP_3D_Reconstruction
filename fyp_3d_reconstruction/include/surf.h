@@ -13,6 +13,5 @@ using namespace cv;
 using namespace cv::xfeatures2d;
 using namespace std;
 
-void surf(Mat img_undist[],vector< DMatch >& good_matches);
-
+void surf(Mat img_undist[],vector< DMatch >& good_matches,vector< Point2f >& points_1,vector< Point2f >& points_2,const int hessian,const int idx_1,const int idx_2,Mat& img_matches);
 #endif /* SURF_H */
