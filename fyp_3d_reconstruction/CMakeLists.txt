@@ -4,9 +4,10 @@ project(fyp_3d_reconstruction)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(OpenCV REQUIRED)
+find_package(OpenCV 3.1.0 EXACT REQUIRED)
 find_package(catkin REQUIRED)
-
+find_package(cmake_modules REQUIRED)
+find_package(Eigen REQUIRED)
 # Check if OpenCV package has been found
 message(STATUS "OpenCV library status:")
 message(STATUS "    version: ${OpenCV_VERSION}")
@@ -119,6 +120,7 @@ catkin_package(
      include
      ${OpenCV_INCLUDE_DIRS}
      ${catkin_INCLUDE_DIRS}
+     ${Eigen_INCLUDE_DIRS}
      )
 
 ## Declare a C++ library
@@ -142,6 +144,7 @@ add_executable(fyp_3d_reconstruction src/main.cpp src/global.cpp src/readInImage
  target_link_libraries(fyp_3d_reconstruction
    ${OpenCV_LIBRARIES}
    ${catkin_LIBRARIES}
+   ${Eigen_LIBRARIES}
  )
 
 #############
