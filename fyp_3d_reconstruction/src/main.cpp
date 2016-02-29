@@ -3,6 +3,7 @@
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/calib3d.hpp"
+#include "opencv2/sfm.hpp"
 
 #include <iostream>
 
@@ -106,6 +107,30 @@ int main(int argc, char** argv)
         cout << "Translation: " << t << endl;
 
     }
+
+	/*caculate the projection matrix*/
+	Mat projMatr1 = Mat_<double>(3,4);
+	Mat projMatr2 = Mat_<double>(3,4);
+	Mat points4D = Mat_<double>(3,points_1.size());
+	
+	Mat Rt = Mat_<double>(3,4);
+	Mat Rt_init = (Mat_<double>(3,4)<< 1, 0, 0, 0,
+				      	   0, 1, 0, 0,
+				           0, 0, 1, 0 );
+
+	hconcat(R, t, Rt);
+	projMatr1 = camIntrinsic * Rt_init;
+	projMatr2 = camIntrinsic * Rt;
+
+	std::vector<cv::Mat> listOfproj;
+	listOfproj.push_back(projMatr1);
+	listOfproj.push_back(projMatr2);
+
+	std::vector< vector<Point2f> > listOfpoints;
+	listOfpoints.push_back(points_1);
+	listOfpoints.push_back(points_2);
+    cv::sfm::triangulatePoints(listOfpoints,listOfproj, points4D);
+
 
     return 0;
 }
