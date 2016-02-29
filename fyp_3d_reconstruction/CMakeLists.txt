@@ -8,11 +8,19 @@ find_package(OpenCV 3.1.0 EXACT REQUIRED)
 find_package(catkin REQUIRED)
 find_package(cmake_modules REQUIRED)
 find_package(Eigen REQUIRED)
+
 # Check if OpenCV package has been found
 message(STATUS "OpenCV library status:")
 message(STATUS "    version: ${OpenCV_VERSION}")
 message(STATUS "    libraries: ${OpenCV_LIBS}")
 message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
+
+# Check if Eigen package has been found
+message(STATUS "Eigen library status:")
+message(STATUS "    version: ${Eigen_VERSION}")
+message(STATUS "    libraries: ${Eigen_LIBS}")
+message(STATUS "    include path: ${Eigen_INCLUDE_DIRS}")
+
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -122,6 +130,7 @@ catkin_package(
      ${catkin_INCLUDE_DIRS}
      ${Eigen_INCLUDE_DIRS}
      )
+ add_definitions(${EIGEN_DEFINITIONS})
 
 ## Declare a C++ library
 # add_library(fyp_3d_reconstruction
