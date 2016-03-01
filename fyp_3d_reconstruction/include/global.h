@@ -6,7 +6,7 @@
 using namespace cv;
 
 /* max number of images */
-extern const int n;
+extern const int N;
 
 /* camera matrix */
 extern const Mat camIntrinsic;

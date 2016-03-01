@@ -1,3 +1,7 @@
+// TODO: the includes between files are not elegant enough. Some header files are included more than once. If there is a better way to organize our header files and includes, please do it now.
+//
+// $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
 
@@ -8,7 +12,6 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/calib3d.hpp>
-//#include "opencv2/sfm.hpp"
 #include <opencv2/core/eigen.hpp>
 
 
@@ -17,6 +20,8 @@
 #include "global.h"
 #include "readInImages.h"
 #include "surf.h"
+
+// $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 using namespace std; 
 using namespace cv;
@@ -36,13 +41,26 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "Reconstruction");
     ros::NodeHandle nh;
     ros::Publisher pub_pts = nh.advertise<visualization_msgs::Marker>("recon_pts", 500);
+
+// TODO: change pub_cam topic type to MarkerArray s.t. multiple cameras can be displayed. If possible, please use tf library to display multiple axes instead of using arrows in marker type.
+//
+// $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
     ros::Publisher pub_cam = nh.advertise<visualization_msgs::Marker>("recon_cam", 10);
 
+// $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
     /* Variables */
 
-    Mat img[n];  // original images
-    Mat img_undist[n];  // undistorted images
+    Mat img[N];  // original images
+    Mat img_undist[N];  // undistorted images
+    
+    int m;  // number of images loaded
+    int n;  // number of matched points
+
+// TODO: these variables below are not compatible with multiple images input. Please change them into arrays and also change accordingly in the many functions below. Note that essential matrix, img_matches and R_eigen can be temporary variables, and might not need to be changed to arrays. Please decide at will from the sense of coding neatness and formality when making changes. 
+//
+// $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
     vector< DMatch > good_matches;  // matches for drawing
     vector< Point2f > points_1, points_2;  // coordinates of matched points
@@ -52,11 +70,14 @@ int main(int argc, char** argv)
     Mat mask; // mask for inliers after RANSAC
     Matrix3f R_eigen; // matrix representation in eigen library
 
-    int m;  // number of images loaded
-    int n;  // number of matched points
+// $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 
-// TODO: Use rosparam
+
+// TODO: obviously right now using rosnode, we cannot pass argv as before. Please read ros documentations and if necessary use "rosparam" functionality to achieve folder path input again.
+//
+// $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
 //    /* --------------------- Specifies executable usage --------------------- */
 //    if(argc != 3)
 //    {
@@ -65,8 +86,8 @@ int main(int argc, char** argv)
 //        cout << "       [directory] : path to image folder. Do NOT add '/' at the end. Folder should only contain image files" << endl;
 //        return -1;
 //    }
-//
-//
+
+
     /* ------------ In "images" mode - reading images from folder ----------- */
 
 //    if (strcmp(argv[1], "images") == 0)  // if argv[1] is "images"
@@ -91,16 +112,19 @@ int main(int argc, char** argv)
             return -1;
 //    }   
 
+// $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
 
     /* ------------------------- 3D Reconstruction -------------------------- */
 
     Mat R[m], t[m]; // rotation matrices, cam translations
-    Quaternionf q[m];
+    Quaternionf q[m]; // orientation quaternions
 
+    /* initialization of the first camera R,t,q */
     R[0] = (Mat_<float>(3,3) << 1,0,0,0,1,0,0,0,1);
     t[0] = (Mat_<float>(3,1) << 0,0,0);
-    cv2eigen(R[0], R_eigen);
-    q[0] = R_eigen;
+    cv2eigen(R[0], R_eigen); // convert R from cv type to eigen type
+    q[0] = R_eigen; // transform into quaternion
 
 
     /* Show Image size */
@@ -110,19 +134,23 @@ int main(int argc, char** argv)
     for (int i=0; i<m; i++)
         undistort(img[i], img_undist[i], camIntrinsic, dist);
 
+// TODO: from the first visualization result, we can see that only taking the "good" image matches is far from enough. The number of points is not enough to do a good reconstruction. Please find a way to increase the number of points that can be used for reconstruction, or, increase n. Note that RANSAC normally cannot take matches with more than 1/3 outliers.
+//
+// $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
     /* SURF detector for features and matching*/
     surf(img_undist, good_matches, points_1, points_2, 400, 0, 1, img_matches);
+
+// $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
     //-- Show good matches
 //    namedWindow("Good Matches", CV_WINDOW_NORMAL);
 //    imshow("Good Matches", img_matches);
     
-    n = points_1.size();
-    cout<<"Total "<< n <<" "<<"points have been found"<<endl;
-//    for(int i=0;i<n;i++)
-//        cout<<"x = "<<points_1[i]<<"	"<<"y = "<<points_2[i]<<endl;
-//    waitKey();
 
+    /* number of feature points */
+    n = points_1.size(); 
+    cout<<"Total "<< n <<" "<<"points have been found"<<endl;
 
     /* find essential matrix using five-point algorithm with RANSAC */
     E = findEssentialMat(points_1, points_2, camIntrinsic, RANSAC, 0.999, 1.0, mask);
@@ -144,6 +172,11 @@ int main(int argc, char** argv)
     cout << "Quaternion 1: " << "w: "<<q[0].w()<<endl<<"vector: "<< endl<<q[0].vec() << endl;
     cout << "Quaternion 2: " << "w: "<<q[1].w()<<endl<<"vector: "<< endl<<q[1].vec() << endl;
 
+    
+// TODO: please identify which variables are temporary variables and which are better to be declared at the beginning, and modify names such as "Rt" and "Rt_init", make them recognizable when multiple images are present.
+//
+// $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
     /* calculate projection matrices */
     Mat projMatr1(3,4,CV_32F);  // projection matrices
     Mat projMatr2(3,4,CV_32F);
@@ -163,6 +196,9 @@ int main(int argc, char** argv)
     vector< Mat_<float> > listOfproj;  // vector of projection matrices
     listOfproj.push_back(projMatr1);
     listOfproj.push_back(projMatr2);
+
+// $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
 
     /* Triangulation */
     triangulatePoints(listOfproj[0], listOfproj[1], points_1, points_2, points4D);
@@ -210,10 +246,16 @@ int main(int argc, char** argv)
         cam_2.scale.y = 0.1;
         cam_2.scale.z = 0.1;
 
+// TODO: Here all the points colors are in red. If possible change them according to their pixel value in the photos.
+//
+// $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
         pts_array.color.a = 1.0;
         pts_array.color.r = 1.0;
         pts_array.color.g = 0.0;
         pts_array.color.b = 0.0;
+
+// $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
         cam_1.color.a = 1.0;
         cam_1.color.r = 0.0;
@@ -223,6 +265,8 @@ int main(int argc, char** argv)
         cam_2.color.r = 0.0;
         cam_2.color.g = 0.0;
         cam_2.color.b = 1.0;
+
+        /* cameras are initialized with Markers::pose */
 
         cam_1.pose.position.x = t[0].at<float>(0);
         cam_1.pose.position.y = t[0].at<float>(1);
@@ -239,6 +283,8 @@ int main(int argc, char** argv)
         cam_2.pose.orientation.y = q[1].y();
         cam_2.pose.orientation.z = q[1].z();
         cam_2.pose.orientation.w = q[1].w();
+
+        /* points are initialized with geometry_msgs::Point */
 
         for (int i=0;i<n;i++)
         {
