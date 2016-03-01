@@ -3,7 +3,7 @@
 /* max number of images */
 const int n = 30;
 /* camera matrix */
-const Mat camIntrinsic = (Mat_<double>(3,3) << 4269.4,  0,  2629.6,    // [ Fx,  0, cx ]
+const Mat camIntrinsic = (Mat_<float>(3,3) << 4269.4,  0,  2629.6,    // [ Fx,  0, cx ]
                                                0,  4269.5,  1728.6,    // [  0, Fy, cy ]
                                                0,       0,       1);   // [  0,  0,  1 ]
 /* distortion coefficients */
