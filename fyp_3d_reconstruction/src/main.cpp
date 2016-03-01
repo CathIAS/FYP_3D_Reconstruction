@@ -29,18 +29,14 @@ using namespace Eigen;
 
 int main(int argc, char** argv)
 {
-    Mat img[n];  // stores original images
-    Mat img_undist[n];  // stores undistorted images
+    Mat img[n];  // original images
+    Mat img_undist[n];  // undistorted images
 
-    vector< DMatch > good_matches;  // stores matches for drawing
-    vector< Point2f > points_1, points_2;  // stores coordinates of match point
-    Mat img_matches;  // img out with matches
+    vector< DMatch > good_matches;  // matches for drawing
+    vector< Point2f > points_1, points_2;  // coordinates of matched points
+    Mat img_matches;  // img with matches for display
 
     Mat E,R,t; // essential matrix, rotation matrix, cam translation
-
-    Matrix3f R_eigen;
-    Quaternionf q;
-
     Mat mask; // mask for inliers after RANSAC
 
     int m;  // number of images loaded
@@ -107,39 +103,43 @@ int main(int argc, char** argv)
     R.convertTo(R,CV_32FC1);
     t.convertTo(t,CV_32FC1);
     cout << "Rotation Matrix: " << endl << " " << R << endl;
-    cout << "Translation: " << t << endl;
+    cout << "Translation: " << endl << " " << t << endl;
 
+    /* transform rotation matrix to quaternion */
+    Matrix3f R_eigen; // matrix representation in eigen library
     cv2eigen(R, R_eigen);
+    Quaternionf q(R_eigen);
+    q.normalize();
+    cout << "quaternion: " << "w: "<<q.w()<< endl <<"vector: "<< endl<<q.vec() << endl;
 
-
-
-    /* caculate the projection matrix */
-
-    Mat projMatr1(3,4,CV_32F);
+    /* calculate projection matrices */
+    Mat projMatr1(3,4,CV_32F);  // projection matrix
     Mat projMatr2(3,4,CV_32F);
-    Mat points4D(4,points_1.size(),CV_32F);
+    Mat points4D(4,points_1.size(),CV_32F);  // homogeneous point world coordinates
 
-    Mat Rt(3,4,CV_32F);
-    Mat Rt_init = (Mat_<float>(3,4) << 1,0,0,0,0,1,0,0,0,0,1,0) ;
-    cout << "Rt_init: " << Rt_init << endl;
-    hconcat(R, t, Rt);  // Rt = [R | t]
+    Mat Rt(3,4,CV_32F);  // Rt = [R | t]
+    Mat Rt_init = (Mat_<float>(3,4) << 1,0,0,0,0,1,0,0,0,0,1,0) ; // identity Rt
+
+    hconcat(R, t, Rt);  // Rt concatenate
     projMatr1 = camIntrinsic * Rt_init;  // ProjMat = K * Rt
     projMatr2 = camIntrinsic * Rt;
+    cout << "Rt_1: " << endl << " " << Rt_init << endl;
+    cout << "Rt_2: " << endl << " " << Rt << endl;
+    cout << "Proj_1: " << endl << " " << projMatr1 << endl;
+    cout << "Proj_2: " << endl << " " << projMatr2 << endl;
 
     vector< Mat_<float> > listOfproj;  // vector of projection matrices
     listOfproj.push_back(projMatr1);
     listOfproj.push_back(projMatr2);
 
-
-    vector< vector<Point2f> > listOfpoints;
-    listOfpoints.push_back(points_1);
-    listOfpoints.push_back(points_2);
-
+    /* Triangulation */
     triangulatePoints(listOfproj[0], listOfproj[1], points_1, points_2, points4D);
+    cout << "Triangulation results: " << endl;
+    for (int i=0; i<points_1.size(); i++)
+        cout << " " << points4D.at<float>(0,i) << "," <<points4D.at<float>(1,i) << "," << points4D.at<float>(2,i) << "," << points4D.at<float>(3,i) << endl;
 
     return 0;
 }
 
 
-//  Program executable is at <catkin_ws>/devel/lib/fyp_3d_reconstruction
 //  cmd example: ./fyp_3d_reconstruction images ~/photos
