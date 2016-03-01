@@ -4,9 +4,8 @@ Dense 3D Reconstruction from UAV camera images.
 
 Collaborative Final Year Project by Wenxin Liu and Xuelai Sun. HKUST.
 
-#### TODO (Sun): surf function modification & triangulation
-#### TODO (Liu): RANSAC & camera pose extraction
-#### TODO: camera calibration and sampling
+#### TODO (Sun): Improving codes in preparation for multi-cam
+#### TODO (Liu): Solve math problems in current code
 
 * [fyp_3d_reconstruction] is the package src file. Should be put at path/to/catkin_ws/src/
 * [minutes] includes meeting records
