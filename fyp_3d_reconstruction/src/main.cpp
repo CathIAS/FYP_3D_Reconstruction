@@ -66,11 +66,10 @@ int main(int argc, char** argv)
 
             
         /* Get folder path */ 
-        const string folder = "~/git/FYP_3D_Reconstruction/photos/new_recons"; 
+        const string folder = "/home/liuwx/git/FYP_3D_Reconstruction/photos/new_recons"; 
         cout << "Folder path: " << folder << endl;
         /* Read in images from folder path */
         int check = readInImages(img, folder, m);
-        cout << "11111111111111111" << endl;
 
         /* Check if images are loaded successfully */
         if ((check == 0) && (m > 0))
