@@ -36,9 +36,7 @@ int main(int argc, char** argv)
     vector< Point2f > points_1, points_2;  // stores coordinates of match point
     Mat img_matches;  // img out with matches
 
-    Mat E(3,3,CV_32F);
-    Mat R(3,3,CV_32F);
-    Mat t(3,1,CV_32F); // essential matrix, rotation matrix, cam translation
+    Mat E,R,t; // essential matrix, rotation matrix, cam translation
 
     Matrix3f R_eigen;
     Quaternionf q;
@@ -106,6 +104,8 @@ int main(int argc, char** argv)
 
     /* use cheirality check to obtain R, t */
     recoverPose(E, points_1, points_2, camIntrinsic, R, t, mask);
+    R.convertTo(R,CV_32FC1);
+    t.convertTo(t,CV_32FC1);
     cout << "Rotation Matrix: " << endl << " " << R << endl;
     cout << "Translation: " << t << endl;
 
@@ -122,9 +122,7 @@ int main(int argc, char** argv)
     Mat Rt(3,4,CV_32F);
     Mat Rt_init = (Mat_<float>(3,4) << 1,0,0,0,0,1,0,0,0,0,1,0) ;
     cout << "Rt_init: " << Rt_init << endl;
-
     hconcat(R, t, Rt);  // Rt = [R | t]
-    cout << "---------------111" << endl;
     projMatr1 = camIntrinsic * Rt_init;  // ProjMat = K * Rt
     projMatr2 = camIntrinsic * Rt;
 
@@ -137,12 +135,6 @@ int main(int argc, char** argv)
     listOfpoints.push_back(points_1);
     listOfpoints.push_back(points_2);
 
-//    Mat pointMat_1 = Mat(points_1).reshape(1);
-//    pointMat_1 = pointMat_1.t();
-//    Mat pointMat_2 = Mat(points_2).reshape(1);
-//    pointMat_2 = pointMat_2.t();
-
-//    triangulatePoints(listOfproj[0], listOfproj[1], pointMat_1, pointMat_2, points4D);
     triangulatePoints(listOfproj[0], listOfproj[1], points_1, points_2, points4D);
 
     return 0;
