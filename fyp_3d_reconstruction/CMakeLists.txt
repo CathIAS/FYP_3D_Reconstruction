@@ -5,9 +5,12 @@ project(fyp_3d_reconstruction)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(OpenCV 3.1.0 EXACT REQUIRED)
-find_package(catkin REQUIRED)
 find_package(cmake_modules REQUIRED)
 find_package(Eigen REQUIRED)
+find_package(catkin REQUIRED COMPONENTS
+    roscpp
+    visualization_msgs
+    )
 
 # Check if OpenCV package has been found
 message(STATUS "OpenCV library status:")
@@ -114,7 +117,7 @@ message(STATUS "    include path: ${Eigen_INCLUDE_DIRS}")
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES fyp_3d_reconstruction
-#  CATKIN_DEPENDS other_catkin_pkg
+#  CATKIN_DEPENDS roscpp visulization_msgs
 #  DEPENDS system_lib
 )
 

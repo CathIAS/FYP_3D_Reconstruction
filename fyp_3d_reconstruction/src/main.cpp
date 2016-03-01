@@ -1,14 +1,15 @@
-#include "ros/ros.h"
+#include <ros/ros.h>
+#include <visualization_msgs/Marker.h>
 
-#include "Eigen/Dense"
-#include "Eigen/Geometry"
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
 
-#include "opencv2/core.hpp"
-#include "opencv2/highgui.hpp"
-#include "opencv2/imgproc.hpp"
-#include "opencv2/calib3d.hpp"
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/calib3d.hpp>
 //#include "opencv2/sfm.hpp"
-#include "opencv2/core/eigen.hpp"
+#include <opencv2/core/eigen.hpp>
 
 
 #include <iostream>
@@ -29,6 +30,12 @@ using namespace Eigen;
 
 int main(int argc, char** argv)
 {
+
+    ros::init(argc, argv, "Reconstruction");
+    ros::NodeHandle nh;
+    ros::Publisher pub_pts = nh.advertise<visualization_msgs::Marker>("recon_pts", 500);
+    ros::Publisher pub_cam = nh.advertise<visualization_msgs::Marker>("recon_cam", 10);
+
     Mat img[n];  // original images
     Mat img_undist[n];  // undistorted images
 
@@ -42,26 +49,28 @@ int main(int argc, char** argv)
     int m;  // number of images loaded
 
 
-    /* --------------------- Specifies executable usage --------------------- */
-    if(argc != 3)
-    {
-        cout << "Usage: ./fyp_3d_reconstruction <mode> [directory]" << endl;
-        cout << "       <mode> : images" << endl;
-        cout << "       [directory] : path to image folder. Do NOT add '/' at the end. Folder should only contain image files" << endl;
-        return -1;
-    }
+// TODO: Use rosparam
+//    /* --------------------- Specifies executable usage --------------------- */
+//    if(argc != 3)
+//    {
+//        cout << "Usage: ./fyp_3d_reconstruction <mode> [directory]" << endl;
+//        cout << "       <mode> : images" << endl;
+//        cout << "       [directory] : path to image folder. Do NOT add '/' at the end. Folder should only contain image files" << endl;
+//        return -1;
+//    }
+//
+//    /* ------------ In "images" mode - reading images from folder ----------- */
+//    if (strcmp(argv[1], "images") == 0)  // if argv[1] is "images"
+//    {
+//        cout << "Mode selected: images" << endl;
 
-    /* ------------ In "images" mode - reading images from folder ----------- */
-    if (strcmp(argv[1], "images") == 0)  // if argv[1] is "images"
-    {
-        cout << "Mode selected: images" << endl;
-
-        /* Get folder path from command line */ 
-        const string folder = argv[2]; 
-        cout << "Folder path: " << argv[2] << endl;
-
+            
+        /* Get folder path */ 
+        const string folder = "~/git/FYP_3D_Reconstruction/photos/new_recons"; 
+        cout << "Folder path: " << folder << endl;
         /* Read in images from folder path */
         int check = readInImages(img, folder, m);
+        cout << "11111111111111111" << endl;
 
         /* Check if images are loaded successfully */
         if ((check == 0) && (m > 0))
@@ -72,7 +81,7 @@ int main(int argc, char** argv)
         }
         else 
             return -1;
-    }   
+//    }   
 
     /* ------------------------- 3D Reconstruction -------------------------- */
     /* Show Image size */
