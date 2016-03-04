@@ -48,7 +48,8 @@ void surf(Mat img_undist[],vector< DMatch >& good_matches,vector< Point2f >& poi
 
     //only "good" matches
     for( int i = 0; i < descriptors_1.rows; i++ )
-    { if( matches[i].distance <= max(2*min_dist, 0.02) )
+//    { if( matches[i].distance <= max(2*min_dist, 0.02) )
+    { if( matches[i].distance <= max_dist )
         { good_matches.push_back( matches[i]); }
     }
 	//sort the matches from mindis to maxdis
