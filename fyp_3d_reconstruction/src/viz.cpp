@@ -5,7 +5,7 @@
  *      Author: xsunaf
  */
 #include "viz.h"
- void viz(const cv::Mat points4D,ros::Publisher& pub_pts,ros::Publisher& pub_cam,cv::Mat t[],Eigen::Quaternionf q0,Eigen::Quaternionf q[]){
+ void viz(const cv::Mat points4D,ros::Publisher& pub_pts,ros::Publisher& pub_cam,cv::Mat t[],Eigen::Quaterniond q0,Eigen::Quaterniond q[]){
 
 	 	visualization_msgs::Marker pts_array, cam_1, cam_2;
 
@@ -65,12 +65,12 @@
 
         /* cameras are initialized with Markers::pose */
 
-        cam_1.pose.position.x = t0.at<float>(0);
-        cam_1.pose.position.y = t0.at<float>(1);
-        cam_1.pose.position.z = t0.at<float>(2);
-        cam_2.pose.position.x = t[0].at<float>(0);
-        cam_2.pose.position.y = t[0].at<float>(1);
-        cam_2.pose.position.z = t[0].at<float>(2);
+        cam_1.pose.position.x = t0.at<double>(0);
+        cam_1.pose.position.y = t0.at<double>(1);
+        cam_1.pose.position.z = t0.at<double>(2);
+        cam_2.pose.position.x = t[0].at<double>(0);
+        cam_2.pose.position.y = t[0].at<double>(1);
+        cam_2.pose.position.z = t[0].at<double>(2);
 
         cam_1.pose.orientation.x = q0.x();
         cam_1.pose.orientation.y = q0.y();

@@ -29,9 +29,9 @@ void recoverPose(const cv::Mat E[], const std::vector< cv::Point2f > points_1[],
 	}
 }
 
-void r2q( cv::Mat R[],Eigen::Quaternionf q0,Eigen::Quaternionf q[] ){
+void r2q( cv::Mat R[] ,Eigen::Quaterniond q0,Eigen::Quaterniond q[] ){
 
-	Eigen::Matrix3f R_eigen;
+	Eigen::Matrix3d R_eigen;
 	cv::cv2eigen(R0,R_eigen);
 	q0 = R_eigen;
     q0.normalize();

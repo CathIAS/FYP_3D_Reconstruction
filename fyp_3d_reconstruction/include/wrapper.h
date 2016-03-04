@@ -26,7 +26,7 @@ void findEssentialMat(const std::vector< cv::Point2f > points_1[],const std::vec
 void recoverPose(const cv::Mat E[], const std::vector< cv::Point2f > points_1[],const std::vector< cv::Point2f > points_2[],
 				const cv::Mat cameraMatrix, cv::Mat R[], cv::Mat t[],cv::Mat mask[]);
 
-void r2q(cv::Mat R[],Eigen::Quaternionf q0,Eigen::Quaternionf q[]);
+void r2q(cv::Mat R[],Eigen::Quaterniond q0,Eigen::Quaterniond q[]);
 
 void triangulatePoints( const cv::Mat R[],const cv::Mat t[],const std::vector< cv::Point2f > points[],
 						const std::vector< cv::Point2f > pointsCompare[],cv::Mat points4D[] );

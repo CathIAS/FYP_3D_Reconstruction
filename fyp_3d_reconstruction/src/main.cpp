@@ -73,7 +73,7 @@ int main(int argc, char** argv)
         Mat E[m-1];  										// essential matrix
         Mat mask[m-1]; 										// mask for inliers after RANSAC
         Mat R[m-1], t[m-1]; 								// rotation matrices, cam translations
-        Quaternionf q0,q[m]; 								// orientation quaternions
+        Quaterniond q[m-1]; 								// orientation quaternions
         n_matches = new int[m];
         mid = m/2;
 
@@ -112,12 +112,12 @@ int main(int argc, char** argv)
     cout << "Triangulation results: " << endl;
 
     for (int i=0; i<n_matches[0]; i++)
-        cout << " " << points4D[0].at<float>(0,i) << "," <<points4D[0].at<float>(1,i) << ","
-		<< points4D[0].at<float>(2,i) << "," << points4D[0].at<float>(3,i) << endl;
+        cout << " " << points4D[0].at<double>(0,i) << "," <<points4D[0].at<double>(1,i) << ","
+		<< points4D[0].at<double>(2,i) << "," << points4D[0].at<double>(3,i) << endl;
 
     /* ----------------------- Visualization with RViz --------------------------*/
     while (ros::ok()){
-    	viz(points4D[0],pub_pts,pub_cam,t,q0,q);
+    	viz(points4D[3],pub_pts,pub_cam,t,q0,q);
     }
     delete n_matches;
     return 0;
