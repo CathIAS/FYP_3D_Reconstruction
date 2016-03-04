@@ -1,9 +1,14 @@
 #include "readInImages.h"
 
+using namespace std;
+using namespace cv;
+
 /* Read in images from folder path */
-int readInImages(Mat img[], const string &folder, int &m)
+
+void readInImages(Mat img[], const string &folder, int &m)
 {
-    /* Obtain list of image file names */
+
+	/* Obtain list of image file names */
     vector<string> filenames;  // a vector of the found names in the path
     readFilenames(filenames, folder);  // get names and assign them to vector
 
@@ -15,10 +20,10 @@ int readInImages(Mat img[], const string &folder, int &m)
     
     /* load images */
     int suc = loadImages(img, filenames, folder, m); // 0 - success, -1 - fail
-    return suc;
+
+    assert((suc==0)&& (m > 0)&&"No image was found! Aborting...");
+    cout << "Success in loading images! Number of images loaded: " << m << endl;
 }
-
-
 /* Returns a list of files in a directory (except the ones that begin with a dot) */
 void readFilenames(vector<string> &filenames, const string &directory)
 {

@@ -9,9 +9,6 @@
 #include "opencv2/xfeatures2d.hpp"
 #include "opencv2/imgproc.hpp"
 
-using namespace cv;
-using namespace cv::xfeatures2d;
-using namespace std;
-
-void surf(Mat img_undist[],vector< DMatch >& good_matches,vector< Point2f >& points_1,vector< Point2f >& points_2,const int hessian,const int idx_1,const int idx_2,Mat& img_matches);
+void surf(const cv::Mat img_undist[],std::vector< cv::DMatch > good_matches,std::vector< cv::Point2f > points_1,std::vector< cv::Point2f > points_2,const int hessian,const int idx_1,const int idx_2,cv::Mat img_matches);
+void surf(const cv::Mat img_undist[],std::vector< cv::DMatch > good_matches[],std::vector< cv::Point2f > points_1[],std::vector< cv::Point2f > points_2[],const int hessian,cv::Mat img_matches[]);
 #endif /* SURF_H */

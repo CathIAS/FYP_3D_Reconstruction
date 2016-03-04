@@ -12,17 +12,14 @@
 
 #include "global.h"
 
-using namespace cv;
-using namespace std;
+/* Read in images from folder path */
+void readInImages(cv::Mat img[], const std::string &folder, int &m);
 
 /* Read in images from folder path */
-int readInImages(Mat img[], const string &folder, int &m);
-
-/* Read in images from folder path */
-void readFilenames(vector<string> &filenames, const string &directory);
+void readFilenames(std::vector<std::string> &filenames, const std::string &directory);
 
 /* Load images with filenames */
-int loadImages(Mat img[], vector<string> &filenames, const string &folder, int &m);
+int loadImages(cv::Mat img[], std::vector<std::string> &filenames, const std::string &folder, int &m);
 
 #endif /* READINIMAGES_H */
 
