@@ -90,7 +90,7 @@ int main(int argc, char** argv)
     /* use cheirality check to obtain R, t */
     recoverPose(E, points, pointsCompare, camIntrinsic, R, t, mask);
 
-    /* show image with matches and RANSAC inliers */
+    /* draw RANSAC inliers in red */
     for (int i=0; i<(m-1);i++){    
         for (int j=0; j<n_matches[i];j++){
             if (mask[i].at<uchar>(j,0) != 0)
