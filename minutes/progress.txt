@@ -69,5 +69,8 @@ A: Yes. Use 2D to 2D projection in the first match, and use 3D to 2D projection 
 4. Real time BA?
 A: Pass.
 
+############ 2016-03-07 ############
+Meeting with Shen and Xuelai
 
-
+1. BA structure made clear
+2. multi-image method updated - PnP in sequence
