@@ -5,7 +5,8 @@
  *      Author: xsunaf
  */
 #include "viz.h"
- void viz(const cv::Mat points4D,ros::Publisher& pub_pts,ros::Publisher& pub_cam,cv::Mat t[],Eigen::Quaterniond q0,Eigen::Quaterniond q[]){
+#include <iostream>
+ void viz(const cv::Mat points3D,ros::Publisher& pub_pts,ros::Publisher& pub_cam,cv::Mat t[],cv::Mat mask[],Eigen::Quaterniond q[]){
 
 	 	visualization_msgs::Marker pts_array, cam_1, cam_2;
 
@@ -82,17 +83,31 @@
         cam_2.pose.orientation.w = q[0].w();
 
         /* points are initialized with geometry_msgs::Point */
-
+/*
         for (int i=0;i<n_matches[0];i++)
         {
             geometry_msgs::Point p;
-            p.x = points4D.at<float>(0,i);
-            p.y = points4D.at<float>(1,i);
-            p.z = points4D.at<float>(2,i);
-
+            p.x = points3D.at<float>(0,i);			//no double here
+            p.y = points3D.at<float>(1,i);
+            p.z = points3D.at<float>(2,i);
             pts_array.points.push_back(p);
         }
+*/
+        	int inlier_count = 0;
+            int outlier_count = 0;
+            for (int i=0;i<n_matches[0];i++)
+            {
+                if (mask[0].at<uchar>(i,0) != 0)
+                {
+                    geometry_msgs::Point p;
 
+                    p.x = points3D.at<float>(0,i);
+                    p.y = points3D.at<float>(1,i);
+                    p.z = points3D.at<float>(2,i);
+                    pts_array.points.push_back(p);
+                    inlier_count++;
+                }
+            }
         pub_pts.publish(pts_array);
         pub_cam.publish(cam_1);
         pub_cam.publish(cam_2);

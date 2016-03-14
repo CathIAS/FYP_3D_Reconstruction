@@ -54,7 +54,7 @@ int main(int argc, char** argv)
 
 
     /* Get folder path */ 
-    const string folder = "/home/liuwx/git/FYP_3D_Reconstruction/photos/new_recons";
+    const string folder = "/home/xsunaf/FYP/FYP_3D_Reconstruction/photos/test-2";
     cout << "Folder path: " << folder << endl;
 
     /* Read in images from folder path */
@@ -72,7 +72,7 @@ int main(int argc, char** argv)
     Mat mask[m-1]; 										// mask for inliers after RANSAC
     Mat R[m-1], t[m-1]; 								// rotation matrices, cam translations
     Quaterniond q[m-1]; 								// orientation quaternions
-    n_matches = new int[m];  
+    n_matches = new int[m-1];
     mid = m/2;
 
 
@@ -88,7 +88,17 @@ int main(int argc, char** argv)
     findEssentialMat(points, pointsCompare, camIntrinsic, RANSAC, 0.999, 1.0, mask, E);
 
     /* use cheirality check to obtain R, t */
-    recoverPose(E, points, pointsCompare, camIntrinsic, R, t, mask);
+    recoverPose(E[0], points[0], pointsCompare[0], camIntrinsic, R[0], t[0], mask[0]);
+
+
+    // Obtain inverse:
+    Mat R_12[1], t_12[1];  // p_2 = R_12 * p_1 + t_12  representation of the first cam in the second
+    Mat R_21[1], t_21[1];  // representation of the second cam in the first
+
+    R_12[0] = R[0];
+    t_12[0] = t[0];
+    R_21[0] = R_12[0].inv();
+    t_21[0] = -1 * R_21[0] * t_12[0];
 
     /* draw RANSAC inliers in red */
     for (int i=0; i<(m-1);i++){    
@@ -101,7 +111,7 @@ int main(int argc, char** argv)
     //-- Show good matches
     namedWindow("Good Matches", CV_WINDOW_NORMAL);
     imshow("Good Matches", img_matches[0]);
-    waitKey();
+    //waitKey();
 
     cout << "Rotation Matrix 1: " << endl << " " << R0 << endl;
     cout << "Translation 1: " << endl << " " << t0 << endl;
@@ -109,23 +119,32 @@ int main(int argc, char** argv)
     cout << "Translation 2: " << endl << " " << t[0] << endl;
 
     /* transform rotation matrix to quaternion */
-    r2q(R,q0,q);
+    r2q(R_21,q0,q);
     cout << "Quaternion 1: "<< endl << "w: "<<q0.w()<<endl<<"vector: "<< endl<<q0.vec() << endl;
     cout << "Quaternion 2: "<< endl << "w: "<<q[0].w()<<endl<<"vector: "<< endl<<q[0].vec() << endl;
 
 
     /* Triangulation */
     Mat points4D[m-1];  // homogeneous point world coordinates
+    //@brief Reconstructs points by triangulation.
+    //Keep in mind that all input data should be of float type in order for this function to work.
     triangulatePoints(R,t,points,pointsCompare,points4D);
-    cout << "Triangulation results: " << endl;
 
+    Mat points3D(3,n_matches[0],CV_32F);
     for (int i=0; i<n_matches[0]; i++)
-        cout << " " << points4D[0].at<double>(0,i) << "," <<points4D[0].at<double>(1,i) << ","
-            << points4D[0].at<double>(2,i) << "," << points4D[0].at<double>(3,i) << endl;
+    {
+    	float x = points4D[0].at<float>(3,i);
+        points3D.at<float>(0,i) = points4D[0].at<float>(0,i) / x;
+        points3D.at<float>(1,i) = points4D[0].at<float>(1,i) / x;
+        points3D.at<float>(2,i) = points4D[0].at<float>(2,i) / x;
+   }
+
+    solvePnPRansac(points3D,points[2],camIntrinsic,dist,R[2],t[2]);
+
 
     /* ----------------------- Visualization with RViz --------------------------*/
     while (ros::ok()){
-        viz(points4D[3],pub_pts,pub_cam,t,q0,q);
+        viz(points3D,pub_pts,pub_cam,t_21,mask,q);
     }
     delete n_matches;
     return 0;

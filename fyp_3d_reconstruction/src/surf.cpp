@@ -82,39 +82,24 @@ void surf(const Mat img_undist[],vector< DMatch > good_matches,vector< Point2f >
 void surf(const Mat img_undist[],vector< DMatch > good_matches[],vector< Point2f > points[],vector< Point2f > pointsCompare[],const int hessian,Mat img_matches[])
 {
     /*variables*/
-    vector<KeyPoint> keypoints, keypointsCompare[m-1];  // feature points
-    Mat gimg, gimgCompare[m-1];  // grey images
-    Mat descriptors, descriptorsCompare[m-1];  // descriptors
+    vector<KeyPoint> keypoints[m];  // feature points
+    Mat gimg[m];  // grey images
+    Mat descriptors[m];  // descriptors
     std::vector< DMatch > matches[m-1];
     FlannBasedMatcher matcher;
 
     Ptr<SURF> detector = SURF::create( hessian );
 
-    //-- Step 1: Detect the keypoints of mid-img using SURF Detector
-    cv::cvtColor(img_undist[mid], gimg, cv::COLOR_BGR2GRAY);
-    if( !gimg.data ){std::cout<< " --(!) Error reading images " << std::endl;}
-    detector->detect( gimg, keypoints);
-    detector->compute( gimg, keypoints, descriptors );
-
     //-- Step 2: Detect the keypoints of other imgs using SURF Detector, then match with mid-img
     for(int i=0;i< m;i++){
-        if(i == mid){continue;}
-        else if(i<mid){
+            cv::cvtColor(img_undist[i], gimg[i], cv::COLOR_BGR2GRAY);
+            if( !gimg[i].data ){std::cout<< " --(!) Error reading images " << std::endl;}
+            detector->detect( gimg[i], keypoints[i]);
+            detector->compute( gimg[i], keypoints[i], descriptors[i] );
+    }
 
-            cv::cvtColor(img_undist[i], gimgCompare[i], cv::COLOR_BGR2GRAY);
-            if( !gimgCompare[i].data ){std::cout<< " --(!) Error reading images " << std::endl;}
-            detector->detect( gimgCompare[i], keypointsCompare[i]);
-            detector->compute( gimgCompare[i], keypointsCompare[i], descriptorsCompare[i] );
-            matcher.match( descriptors, descriptorsCompare[i], matches[i]);
-        }
-        else if(i>mid){
-
-            cv::cvtColor(img_undist[i], gimgCompare[i-1], cv::COLOR_BGR2GRAY);
-            if( !gimgCompare[i-1].data ){std::cout<< " --(!) Error reading images " << std::endl;}
-            detector->detect( gimgCompare[i-1], keypointsCompare[i-1]);
-            detector->compute( gimgCompare[i-1], keypointsCompare[i-1], descriptorsCompare[i-1] );
-            matcher.match( descriptors, descriptorsCompare[i-1], matches[i-1]);
-        }
+    for(int i=0;i<(m-1);i++){
+    matcher.match( descriptors[i], descriptors[i+1], matches[i]);
     }
 
     //-- Step 3: Calculate dist and select good matches for each pair
@@ -124,7 +109,7 @@ void surf(const Mat img_undist[],vector< DMatch > good_matches[],vector< Point2f
         double max_dist = 0;
         double min_dist = 100;
         //-- Quick calculation of max and min distances between keypoints for pair[i]
-        for( int j = 0; j < descriptors.rows; j++){
+        for( int j = 0; j < descriptors[i].rows; j++){
             double dist = matches[i][j].distance;
             if( dist < min_dist ) min_dist = dist;
             if( dist > max_dist ) max_dist = dist;
@@ -134,9 +119,9 @@ void surf(const Mat img_undist[],vector< DMatch > good_matches[],vector< Point2f
         printf("-- Min dist : %f \n", min_dist );
 
         //only "good" matches
-        for( int j = 0; j < descriptors.rows; j++ ){
+        for( int j = 0; j < descriptors[i].rows; j++ ){
 
-            if( matches[i][j].distance <= max(8*min_dist, 0.03) ){
+            if( matches[i][j].distance <= max(8*min_dist, 0.02) ){
                 good_matches[i].push_back( matches[i][j]);
             }
         }
@@ -147,8 +132,8 @@ void surf(const Mat img_undist[],vector< DMatch > good_matches[],vector< Point2f
         //convert the matches into points coordinates for pair[i]
         for(int j = 0; j < good_matches[i].size(); j++)
         {
-            points[i].push_back(keypoints[good_matches[i][j].queryIdx].pt);
-            pointsCompare[i].push_back(keypointsCompare[i][good_matches[i][j].trainIdx].pt);
+            points[i].push_back(keypoints[i][good_matches[i][j].queryIdx].pt);
+            pointsCompare[i].push_back(keypoints[i+1][good_matches[i][j].trainIdx].pt);
         }
 
         /* number of feature points */
@@ -162,7 +147,7 @@ void surf(const Mat img_undist[],vector< DMatch > good_matches[],vector< Point2f
     Scalar color = Scalar::all(-1);
     // create img_matches for visualization
     for (int i=0;i<(m-1);i++){
-        drawMatches( gimg, keypoints, gimgCompare[i], keypointsCompare[i], good_matches[i], img_matches[i], color, color, mask, 2);
+        drawMatches( gimg[i], keypoints[i], gimg[i+1], keypoints[i+1], good_matches[i], img_matches[i], color, color, mask, 2);
         // circle the keypoints 
         for (int j=0;j<n_matches[i];j++)
             circle(img_matches[i], points[i][j], 10, Scalar(0,255,0), 3);
