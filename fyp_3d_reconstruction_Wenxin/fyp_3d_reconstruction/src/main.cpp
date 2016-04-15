@@ -289,9 +289,6 @@ int main(int argc, char** argv)
     bundle(R, t, pts3D, vec, m_cam, n_pts);
 
 
-
-
-
     /* ----------------------- Visualization with RViz --------------------------*/
     visualization_msgs::Marker pts_array, cam_1, cam_2;
 
@@ -389,15 +386,16 @@ int main(int argc, char** argv)
 //            cout << "outlier number " << outlier_count << endl;
 //        }
     }
-
-    while (ros::ok())
-    {
-
         pub_pts.publish(pts_array);
         pub_cam.publish(cam_1);
         pub_cam.publish(cam_2);
+/*
+    while (ros::ok())
+    {
+
 
     }
+    */
     return 0;
 }
 

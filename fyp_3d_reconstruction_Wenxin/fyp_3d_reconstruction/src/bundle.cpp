@@ -135,6 +135,23 @@ void toEigen( const Mat R[], const Mat T[], const Mat theta[], const vector<Poin
 }
 
 
+void toCV( Mat R[], Mat T[], Mat theta[], vector<Point3f>& pts3, const Matrix3f Rot[], const Vector3f Theta[], const Vector3f Tra[], const Vector3f P3[], int m, int n)
+{    
+    for (int i=0;i<m;i++)
+    {
+        eigen2cv(Rot[i],R[i]);
+        eigen2cv(Tra[i],T[i]);
+        eigen2cv(Theta[i],theta[i]);
+    }
+    for (int j=0;j<n;j++)
+    {
+        pts3[j].x = P3[j](0);
+        pts3[j].y = P3[j](1);
+        pts3[j].z = P3[j](2);
+    }
+}
+
+
 vector< vector<Point2f> >  getReprojection( const Vector3f Theta[], const Vector3f Tra[], const Vector3f P3[], int m, int n)
 {
     vector< vector<Point2f> > rep;  // vector of reprojection points (mxn)
@@ -238,6 +255,46 @@ void getJacobian( const std::vector< std::vector<cv::Point2f> >& z, const Matrix
 
 }
 
+void getJnH( const std::vector< std::vector<cv::Point2f> >& z, const Matrix3f Rot[], const Vector3f Tra[], const Vector3f P3[], int m_cam, int n_pts, MatrixXf& J, MatrixXf& H)
+{
+    for (int k=0;k<m_cam;k++){      // for each cam
+        for (int j=0;j<n_pts;j++){      // for each pt
+            if (z[k][j].x >= 0){   // if jth pt can be seen from kth cam
+
+                int row_index = 2*(k*n_pts + j);
+                int col_index_r = 6*k;
+                int col_index_t = 6*k + 3;
+                int col_index_x = 6*m_cam + 3*j;
+
+                MatrixXf Jr(2,3);   // cam rotation Jacobian - theta
+                MatrixXf Jt(2,3);   // cam translation Jacobian - T
+                MatrixXf Jx(2,3);   // point Jacobian - X
+                MatrixXf Jc(2,6);
+                
+                Jr = cal_Jr(Rot[k],Tra[k],P3[j]);
+                Jt = cal_Jt(Rot[k],Tra[k],P3[j]);
+                Jx = cal_Jx(Rot[k],Tra[k],P3[j]); 
+                Jc << Jr, Jt;
+
+                J.block(row_index,col_index_r,2,3) = Jr;
+                J.block(row_index,col_index_t,2,3) = Jt;
+                J.block(row_index,col_index_x,2,3) = Jx;
+
+                MatrixXf Jx_t = Jx.transpose();  // 3x2
+                MatrixXf Jc_t = Jc.transpose();  // 6x2
+
+                H.block(col_index_r,col_index_r,6,6) += Jc_t * Jc;
+                H.block(col_index_x,col_index_x,3,3) += Jx_t * Jx;
+                H.block(col_index_x,col_index_r,3,6) += Jx_t * Jc;
+                H.block(col_index_r,col_index_x,6,3) += Jc_t * Jx;
+
+            }
+        }
+    }
+
+
+
+}
     
 void increX( const VectorXf& del_x, Vector3f Theta[], Matrix3f Rot[], Vector3f Tra[], Vector3f P3[], int m_cam, int n_pts)
 {
@@ -273,41 +330,16 @@ void increX( const VectorXf& del_x, Vector3f Theta[], Matrix3f Rot[], Vector3f T
 
 /* =================================================================================== */
 
-void bundle(cv::Mat R[], cv::Mat T[], std::vector<Point3f> pts3, std::vector< std::vector<cv::Point2f> > z, int m_cam, int n_pts)
+void bundle(cv::Mat R[], cv::Mat T[], std::vector<Point3f>& pts3, const std::vector< std::vector<cv::Point2f> >& z, int m_cam, int n_pts)
 {
-
-    /* ------------------------ Variables declaration and init -------------------- */
-
-    Mat theta[m_cam];   // rotation vector
-    for (int i=0; i<m_cam; i++)
-        cv::Rodrigues(R[i], theta[i]);
-
-    Matrix3f Rot[m_cam];   // Eigen rotation matrix
-    Vector3f Theta[m_cam];   // Eigen rotation vector
-    Vector3f Tra[m_cam];   // Eigen translation vector
-    Vector3f P3[n_pts];   // Eigen 3D point vector
-    toEigen(R, T, theta, pts3, Rot, Theta, Tra, P3, m_cam, n_pts);
-
-    vector< vector<Point2f> > rep;  // vector of reprojection points (mxn)
-    vector< vector<Point2f> > z_img;  // vector of observation in image frame
-    z_img = getObservation(z, m_cam, n_pts);
-
-    int n_row = 2 * m_cam * n_pts;  // number of terms in an error vector
-    VectorXf err(n_row);  // error vector init
-
-    int n_col = 6*m_cam + 3*n_pts;
-    MatrixXf J = MatrixXf::Zero(n_row, n_col);  // Jacobian matrix init
-
-    MatrixXf H(n_col,n_col);   // Hessian Matrix
-    VectorXf b(n_col);    // vector b
-    VectorXf del_x(n_col);   // delta x 
-
+    
     /* ---------------------------- Input confirmation ---------------------------- */
-
-    cout << "----------------------------" << endl;
+    
+    cout << endl;
+    cout << "=========================================" << endl;
     cout << "Entering Bundle Adjustment!!" << endl;
     cout << "number of cameras: " << m_cam << endl;
-    cout << "number of points: " << n_pts << endl << endl;
+    cout << "number of points: " << n_pts << endl;
 
     /*
        cout << "3D points: " << endl;
@@ -321,18 +353,76 @@ void bundle(cv::Mat R[], cv::Mat T[], std::vector<Point3f> pts3, std::vector< st
        cout << endl;
        */
 
-    /* ---------------------------------------------------------------------------- */
 
-    int loop = 0;
-    while (loop < 10)
-    {
+    /* ------------------------ Variables declaration and init -------------------- */
 
+    cout << "----------------------------" << endl;
+    cout << "initializing variables" << endl;
+
+    Mat theta[m_cam];   // rotation vector
+    /* get theta from R */
+    for (int i=0; i<m_cam; i++)
+        cv::Rodrigues(R[i], theta[i]);
+
+    Matrix3f Rot[m_cam];   // Eigen rotation matrix
+    Vector3f Theta[m_cam];   // Eigen rotation vector
+    Vector3f Tra[m_cam];   // Eigen translation vector
+    Vector3f P3[n_pts];   // Eigen 3D point vector
+    /* get Eigen from Mat */
+    toEigen(R, T, theta, pts3, Rot, Theta, Tra, P3, m_cam, n_pts);
+
+    vector< vector<Point2f> > rep;  // vector of reprojection points (mxn)
+    vector< vector<Point2f> > z_img;  // vector of observation in image frame
+    /* obtain observation vectors */
+    z_img = getObservation(z, m_cam, n_pts);
+
+    int n_row = 2 * m_cam * n_pts;  // size of error vector
+    int n_col = 6*m_cam + 3*n_pts;  // size of state vector
+    
+    VectorXf err(n_row);  // error vector init 
+    float err_sum;  // sum of square error
+    float ini_err_sum;  // initial error sum
+    float err_ded;  // error deduction rate
+
+    MatrixXf J = MatrixXf::Zero(n_row, n_col);  // Jacobian matrix init
+    MatrixXf H = MatrixXf::Zero(n_col, n_col);   // Hessian Matrix
+    VectorXf b(n_col);    // vector b
+    VectorXf del_x(n_col);   // delta x 
+
+    cout << "variable initialization complete" << endl;
+    cout << "size of J: " << J.rows() << "x" << J.cols() << endl;
+    cout << "size of H: " << H.rows() << "x" << H.cols() << endl;
+    cout << "size of b: " << b.rows() << "x" << b.cols() << endl;
+    
+    /* get initial reprojection */
     rep = getReprojection(Theta, Tra, P3, m_cam, n_pts);
+    /* calculate initial error */
     updateError(z, rep, z_img, m_cam, n_pts, err);
 
-    float total_err = err.dot(err);
-    cout << "total err value at trial " << loop+1 <<": " << total_err << endl;
+    ini_err_sum = err.dot(err);
+    cout << endl << "sum of square errors (initial): " << ini_err_sum << endl;
 
+    /* ---------------------------------------------------------------------------- */
+
+    int it = 3;
+    cout << "----------------------------" << endl;
+    cout << "Entering iterations" << endl;
+    cout << "Number of iterations to go through: " << it << endl << endl;
+/*   
+//    cout << "Rot[0]: " << Rot[0] << endl;
+    cout << "Tra[0]: " << Tra[0] << endl;
+    cout << "Theta[0]: " << Theta[0] << endl;
+    cout << "P3[0]: " << P3[0] << endl << endl;
+
+//    cout << "Rot[1]: " << Rot[1] << endl;
+    cout << "Tra[1]: " << Tra[1] << endl;
+    cout << "Theta[1]: " << Theta[1] << endl;
+    cout << "P3[1]: " << P3[1] << endl << endl;
+    */
+
+    int loop = 0;
+    while (loop < it)
+    {
    /* 
        cout << "Observation (image frame) on 1st cam: " << endl;
        for (int i=0;i<n_pts;i++)
@@ -347,8 +437,6 @@ void bundle(cv::Mat R[], cv::Mat T[], std::vector<Point3f> pts3, std::vector< st
 
 //    cout << "size of error vector: " << err.size() << endl;
       
-    
-    /* ---------------------------------------------------------------------------- */
 /*    
     // testing Jacobian:
 
@@ -392,13 +480,17 @@ void bundle(cv::Mat R[], cv::Mat T[], std::vector<Point3f> pts3, std::vector< st
     updateError(z, rep, z_img, m_cam, n_pts, err);
 */
     
-
+    
     /* complete Jacobian matrix of error function */ 
+//    getJacobian(z, Rot, Tra, P3, m_cam, n_pts, J);
+    /* Obtain Hessian Matrix and b vector for QR */
+//    H = J.transpose() * J;
 
-    getJacobian(z, Rot, Tra, P3, m_cam, n_pts, J);
-//    cout << "size of J: " << J.rows() << "x" << J.cols() << endl;
+    getJnH(z, Rot, Tra, P3, m_cam, n_pts, J, H);
 
-   /* 
+    b = J.transpose() * err;
+   
+    /* 
     // check Jacobian structure - to cv image
     Mat J_cv, J_cv_binary;
     eigen2cv(J, J_cv);
@@ -407,15 +499,6 @@ void bundle(cv::Mat R[], cv::Mat T[], std::vector<Point3f> pts3, std::vector< st
     imshow( "Jacobian", J_cv_binary );                
     waitKey();
     */
-
-
-    /* Obtain Hessian Matrix and b vector for QR */
-
-    H = J.transpose() * J;
-    b = J.transpose() * err;
-
-//    cout << "size of H: " << H.rows() << "x" << H.cols() << endl;
-//    cout << "size of b: " << b.rows() << "x" << b.cols() << endl;
 
 /*   
     // check Hessian structure - to cv image
@@ -429,27 +512,65 @@ void bundle(cv::Mat R[], cv::Mat T[], std::vector<Point3f> pts3, std::vector< st
 
     /* QR to solve H * delta x = -b */
 
-    FullPivLU<MatrixXf> lu_decomp(H);
-    
+//    FullPivLU<MatrixXf> lu_decomp(H);
 //    cout << "determinant of H: " << H.determinant() << endl;
 //    cout << "rank of H is: " << lu_decomp.rank() << endl;
-
-    MatrixXf Id = MatrixXf::Identity(12,12);
-    H.block(0,0,12,12) = H.block(0,0,12,12) + Id;  // fix the first camera
-
-//    cout << "rank of H after adding I: " << lu_decomp.rank() << endl;
+//    FullPivLU<MatrixXf> lu_decomp_p(H);
+//    cout << "rank of H after adding I: " << lu_decomp_p.rank() << endl;
 //    cout << "determinant of H after adding I: " << H.determinant() << endl;
-    ColPivHouseholderQR<MatrixXf> dec(H);
+
+//    MatrixXf Id = MatrixXf::Identity(6,6);
+//    H.block(0,0,6,6) = H.block(0,0,6,6) + Id;  // fix the first camera
+    
+    MatrixXf Id = MatrixXf:: Identity(n_col, n_col);
+    float lamda = 5e-6;
+    H += lamda * Id;
+
+    float begin = clock();
+
+    LLT<MatrixXf> dec(H);
+
     del_x = dec.solve(-b);
+    cout << "***Time for solving linear system: " << float(clock() - begin)/CLOCKS_PER_SEC <<" sec" << endl;
+
+//    cout << "rank of H (from ColQR): " << dec.rank() << endl;
+//    cout << "determinant of H: " << H.determinant() << endl;
 
 //    cout << "size of del_x: " << del_x.rows() << "x" << del_x.cols() << endl;
 //    cout << "delta x solution is: " << endl << del_x << endl;
 
     increX(del_x, Theta, Rot, Tra, P3, m_cam, n_pts);
-    
+
+    rep = getReprojection(Theta, Tra, P3, m_cam, n_pts);
+    updateError(z, rep, z_img, m_cam, n_pts, err);
+
+    err_sum = err.dot(err);
+    cout << "sum of square errors after loop " << loop+1 << ": " << err_sum << endl << endl;
+ 
     loop++;
-    
     }
+
+/*
+//    cout << "Rot[0]: " << Rot[0] << endl;
+    cout << "Tra[0]: " << Tra[0] << endl;
+    cout << "Theta[0]: " << Theta[0] << endl;
+    cout << "P3[0]: " << P3[0] << endl << endl;
+
+//    cout << "Rot[1]: " << Rot[1] << endl;
+    cout << "Tra[1]: " << Tra[1] << endl;
+    cout << "Theta[1]: " << Theta[1] << endl;
+    cout << "P3[1]: " << P3[1] << endl << endl;
+*/
+
+    err_ded = (ini_err_sum - err_sum) / ini_err_sum;
+
+    cout << "----------------------------" << endl;
+    cout << "Bundle Adjustment completed!!" << endl << endl;
+    cout << "Percentage of error deducted in "<< it << " loops: " << err_ded << endl;
+    cout << "=========================================" << endl;
+
+    toCV(R, T, theta, pts3, Rot, Theta, Tra, P3, m_cam, n_pts);
+    cout << "Updated state variables returned" << endl << endl;
 
 }
 

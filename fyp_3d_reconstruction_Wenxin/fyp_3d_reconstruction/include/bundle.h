@@ -11,6 +11,7 @@
 #include <vector>
 #include <Eigen/Dense>
 #include <opencv2/core/eigen.hpp>
+#include <ctime>
 
 
 // convert from pixel fraame to image frame using camera matrix
@@ -26,6 +27,9 @@ Eigen::MatrixXf cal_Jx( const Eigen::Matrix3f R, const Eigen::Vector3f T, const 
 
 // convert variables to Eigen library
 void toEigen( const cv::Mat R[], const cv::Mat T[], const cv::Mat theta[], const std::vector<Point3f> pts3, Eigen::Matrix3f Rot[], Eigen::Vector3f Theta[], Eigen::Vector3f Tra[], Eigen::Vector3f P3[], int m, int n);
+
+// convert variables to OpenCV library
+void toCV( cv::Mat R[], cv::Mat T[], cv::Mat theta[], std::vector<Point3f>& pts3, const Eigen::Matrix3f Rot[], const Eigen::Vector3f Theta[], const Eigen::Vector3f Tra[], const Eigen::Vector3f P3[], int m, int n);
 
 // get reprojections in image frame
 std::vector< std::vector<Point2f> >  getReprojection( const Eigen::Vector3f Theta[], const Eigen::Vector3f Tra[], const Eigen::Vector3f P3[], int m, int n);
@@ -43,7 +47,7 @@ void getJacobian( const std::vector< std::vector<cv::Point2f> >& z, const Eigen:
 void increX( const Eigen::VectorXf& del_x, Eigen::Vector3f Theta[], Eigen::Matrix3f Rot[], Eigen::Vector3f Tra[], Eigen::Vector3f P3[], int m_cam, int n_pts);
 
 // Bundle Adjustment main function
-void bundle(cv::Mat R[], cv::Mat T[], std::vector<Point3f> pts3, std::vector< std::vector<cv::Point2f> > z, int m_cam, int n_pts); 
+void bundle(cv::Mat R[], cv::Mat T[], std::vector<Point3f>& pts3, const std::vector< std::vector<cv::Point2f> >& z, int m_cam, int n_pts); 
 
 // Cam - K: camera matrix, R[]: rotation matrices, T[]: translations
 // Points - points3D (vector)
