@@ -81,24 +81,23 @@ void add_Points( cv::Mat R[],cv::Mat t[],const std::vector< cv::Point2f > points
 		R[add-2].convertTo(R[add-2],CV_32F);
 		t[add-2].convertTo(t[add-2],CV_32F);
 		hconcat(R[add-2], t[add-2], Rt1);  // Rt concatenate
-
 		projMatr1 = camIntrinsic * Rt1;
 
-        cv::Mat projMatr(3,4,CV_32F);
+        cv::Mat projMatr2(3,4,CV_32F);
         cv::Mat Rt(3,4,CV_32F);  // Rt = [R | t]
         R[add-1].convertTo(R[add-1],CV_32F);
         t[add-1].convertTo(t[add-1],CV_32F);
         hconcat(R[add-1], t[add-1], Rt);  // Rt concatenate
+        projMatr2 = camIntrinsic * Rt;
 
-        projMatr = camIntrinsic * Rt;
        // std::cout<<Rt<<std::endl<<projMatr.rows<<projMatr.cols<<std::endl;
         cv::Mat points4Dtemp=cv::Mat_<float>(4,points_1[add-1].size());
-        cv::triangulatePoints(projMatr1, projMatr, pointsx, pointsComparex, points4Dtemp);
+        cv::triangulatePoints(projMatr1, projMatr2, pointsx, pointsComparex, points4Dtemp);
         cv::Point2f x(-1,-1);
         for(int i = 0;i<points4Dtemp.cols;i++){
         	mask3D[0].push_back(x);
-        	mask3D[1].push_back(points_1[add-1][i]);
-        	mask3D[2].push_back(points_2[add-1][i]);
+        	mask3D[1].push_back(pointsx[i]);
+        	mask3D[2].push_back(pointsComparex[i]);
         }
         cv::Mat points3Dtemp(3,pointsx.size(),CV_32F);
 
@@ -183,12 +182,24 @@ void PnP(const std::vector< cv::DMatch > good_matches[],const int add,const std:
 
 	// reconstruct 3d points of common matches from last pics for pnp
 
-	        cv::Mat projMatr(3,4,CV_32F);
+		cv::Mat projMatr1(3,4,CV_32F);
+		if(add==2){
+			projMatr1=projMatr0;
+		}
+		else{
+		cv::Mat Rt1(3,4,CV_32F);  // Rt = [R | t]
+		R[add-3].convertTo(R[add-3],CV_32F);
+		t[add-3].convertTo(t[add-3],CV_32F);
+		hconcat(R[add-3], t[add-3], Rt1);  // Rt concatenate
+
+		projMatr1 = camIntrinsic * Rt1;
+		}
+	        cv::Mat projMatr2(3,4,CV_32F);
 	        cv::Mat Rt(3,4,CV_32F);  // Rt = [R | t]
 	        R[add-2].convertTo(R[add-2],CV_32F);
 	        t[add-2].convertTo(t[add-2],CV_32F);
 	        hconcat(R[add-2], t[add-2], Rt);  // Rt concatenate
-	        projMatr = camIntrinsic * Rt;
+	        projMatr2 = camIntrinsic * Rt;
 //	        std::cout<<Rt<<std::endl;
 
 	        cv::Mat points4Dtemp=cv::Mat_<float>(4,points1.size());
@@ -219,7 +230,7 @@ void PnP(const std::vector< cv::DMatch > good_matches[],const int add,const std:
 */
 
 
-	        cv::triangulatePoints(projMatr0, projMatr, points1, points2, points4Dtemp);
+	        cv::triangulatePoints(projMatr1, projMatr2, points1, points2, points4Dtemp);
 	        std::vector<cv::Point3f> points3Dtemp;
 	        for (int i=0; i < points1.size(); i++)
 	        {
