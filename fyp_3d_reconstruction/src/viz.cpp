@@ -155,8 +155,10 @@
             }
 
         pub_pts.publish(pts_array);
+
         for(int i = 0;i<num;i++){
         	pub_cam.publish(cam[i]);
+        	//std::cout<<i<<std::endl;
         }
         //pub_cam.publish(cam_1);
         //pub_cam.publish(cam_2);

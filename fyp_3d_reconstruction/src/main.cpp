@@ -55,7 +55,7 @@ int main(int argc, char** argv)
 
 
     /* Get folder path */ 
-    const string folder = "/home/xsunaf/FYP/FYP_3D_Reconstruction/photos/test-3";
+    const string folder = "/home/xsunaf/FYP/FYP_3D_Reconstruction/photos/test-4";
     cout << "Folder path: " << folder << endl;
 
     /* Read in images from folder path */
@@ -148,6 +148,15 @@ int main(int argc, char** argv)
 
     std::cout<<points3D.cols<<std::endl;
 
+    // get R and t of the newest cam
+    //PnP(good_matches,3,keypoints,R,t,points,pointsCompare,mask3D,img_matches[1]);
+    //std::cout<< "-------------------------------" << std::endl;
+
+    // take deducted matches and triangulate
+   // add_Points(R,t,points,pointsCompare,points3D,3,mask3D,img_matches[1]);
+
+    //std::cout<<points3D.cols<<std::endl;
+
     /* ------------------- FOR BUNDLE ADJUSTMENT TEST -------------------- */
 
 /*
@@ -195,12 +204,10 @@ int main(int argc, char** argv)
     /* transform rotation matrix to quaternion */
     r2q(_R,q0,q);
     while (ros::ok()){
-        viz(points3D,pub_pts,pub_cam,_t,q,3);
+        viz(points3D,pub_pts,pub_cam,_t,q,m);
     }
 
     delete n_matches;
     return 0;
 }
 
-
-//  cmd example: rosrun fyp_3d_reconstruction fyp_3d_reconstruction
