@@ -138,7 +138,7 @@ void findgoodmatches(std::vector< DMatch >& match,std::vector< DMatch >& good_ma
 	    	        //only "good" matches
 	    	        for( int i = 0; i < match.size(); i++ ){
 
-	    	            if( match[i].distance <= max(10*min_dist, 0.02) ){
+	    	            if( match[i].distance <= max(8*min_dist, 0.02) ){
 	    	                good_matches.push_back( match[i]);
 	    	            }
 	    	        }

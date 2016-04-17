@@ -6,7 +6,7 @@
  */
 #include "viz.h"
 #include <iostream>
- void viz(const cv::Mat points3D,ros::Publisher& pub_pts,ros::Publisher& pub_cam,cv::Mat _t[],cv::Mat mask[],Eigen::Quaterniond q[],int num){
+ void viz(const cv::Mat points3D,ros::Publisher& pub_pts,ros::Publisher& pub_cam,cv::Mat _t[],Eigen::Quaterniond q[],int num){
 
 	 	visualization_msgs::Marker pts_array;//, cam_1, cam_2;
 
@@ -140,9 +140,9 @@
 */
         	int inlier_count = 0;
             int outlier_count = 0;
-            for (int i=0;i<n_matches[0];i++)
+            for (int i=0;i<points3D.cols;i++)
             {
-                if (mask[0].at<uchar>(i,0) != 0)
+                //if (mask[0].at<uchar>(i,0) != 0)
                 {
                     geometry_msgs::Point p;
 
@@ -153,6 +153,7 @@
                     inlier_count++;
                 }
             }
+
         pub_pts.publish(pts_array);
         for(int i = 0;i<num;i++){
         	pub_cam.publish(cam[i]);

@@ -5,6 +5,7 @@
 #include "surf.h"
 #include "viz.h"
 #include "wrapper.h"
+#include "bundle.h"
 
 #include <opencv2/core.hpp>
 
@@ -67,10 +68,10 @@ int main(int argc, char** argv)
     /* Variables */
     vector<KeyPoint> keypoints[m];
     vector< DMatch > good_matches[m-1];  				// matches for drawing
-    vector< Point2f > points[m-1], pointsCompare[m-1];  	// coordinates of matched points
+    vector< Point2f > points[m-1], pointsCompare[m-1],mask3D[m];  	// coordinates of matched points
     Mat img_matches[m-1];  								// img with matches for display
-    Mat E[m-1];  										// essential matrix
-    Mat mask[m-1]; 										// mask for inliers after RANSAC
+    Mat E;  										// essential matrix
+    Mat mask; 										// mask for inliers after RANSAC
     Mat R[m-1],_R[m-1],t[m-1],_t[m-1]; 								// rotation matrices, cam translations
     Quaterniond q[m-1]; 								// orientation quaternions
     n_matches = new int[m-1];
@@ -86,25 +87,33 @@ int main(int argc, char** argv)
     surf(img_undist, good_matches,keypoints, points, pointsCompare, 400, img_matches);
 
     /* find essential matrix using five-point algorithm with RANSAC */
-    findEssentialMat(points, pointsCompare, camIntrinsic, RANSAC, 0.999, 1.0, mask, E);
+    E= findEssentialMat(points[0], pointsCompare[0], camIntrinsic, RANSAC, 0.999, 1.0, mask);
 
     /* use cheirality check to obtain R, t */
-    recoverPose(E[0], points[0], pointsCompare[0], camIntrinsic, R[0], t[0], mask[0]);
+    recoverPose(E, points[0], pointsCompare[0], camIntrinsic, R[0], t[0], mask);
     t[0] = 0.552 * t[0];
+
+    // mask out wrong 2d points
+    vector< Point2f > pointsx,pointsComparex;
+    for(int i=0;i<points[0].size();i++){
+    	if (mask.at<uchar>(i,0) != 0){
+    		pointsx.push_back(points[0][i]);
+    		pointsComparex.push_back(pointsCompare[0][i]);
+    	}
+    }
+    std::cout<<"first 2 images mask result: "<<points[0].size()<<"	"<<pointsx.size()<<std::endl;
 
 
     /* draw RANSAC inliers in red */
-    for (int i=0; i<(m-1);i++){    
-        for (int j=0; j<n_matches[i];j++){
-            if (mask[i].at<uchar>(j,0) != 0)
-                circle(img_matches[i], points[i][j], 10, Scalar(0,0,255), 3);
+/*        for (int i=0; i<(m-1);i++){
+            for (int j=0; j<n_matches[i];j++){
+                if (mask.at<uchar>(j,0) != 0)
+                    circle(img_matches[i], points[i][j], 10, Scalar(0,0,255), 3);
+            }
         }
-    }
+*/
 
-    //-- Show good matches
-    //namedWindow("Good Matches", CV_WINDOW_NORMAL);
-    //imshow("Good Matches", img_matches[0]);
-    //waitKey();
+
 
 
     /* Triangulation */
@@ -112,11 +121,11 @@ int main(int argc, char** argv)
     //@brief Reconstructs points by triangulation.
     //Keep in mind that all input data should be of float type in order for this function to work.
 
-    triangulate_Points(R,t,points,pointsCompare,points4D);
+    triangulate_init(R[0],t[0],pointsx,pointsComparex,points4D,mask3D);
 
-    Mat points3D(3,n_matches[0],CV_32F);
-
-    for (int i=0; i<n_matches[0]; i++)
+    // 4d to 3d
+    Mat points3D(3,points4D.cols,CV_32F);
+    for (int i=0; i<points4D.cols; i++)
     {
     	float x = points4D.at<float>(3,i);
         points3D.at<float>(0,i) = points4D.at<float>(0,i) / x;
@@ -124,19 +133,69 @@ int main(int argc, char** argv)
         points3D.at<float>(2,i) = points4D.at<float>(2,i) / x;
    }
 
-    PnP(good_matches,2,keypoints,R,t,points,pointsCompare);
+    std::cout<<"number of 3D points by first 2 images: "<<points3D.cols<<std::endl;
+    std::cout<< "-------------------------------" << std::endl;
+
+    /* ---------------------------------------------------------------------------------------*/
+
+
+    // get R and t of the newest cam
+    PnP(good_matches,2,keypoints,R,t,points,pointsCompare,mask3D,img_matches[1]);
+    std::cout<< "-------------------------------" << std::endl;
+
+    // take deducted matches and triangulate
+    add_Points(R,t,points,pointsCompare,points3D,2,mask3D,img_matches[1]);
+
     std::cout<<points3D.cols<<std::endl;
-    add_Points(R,t,points,pointsCompare,points3D,2);
-    std::cout<<points3D.cols<<std::endl;
+
+    /* ------------------- FOR BUNDLE ADJUSTMENT TEST -------------------- */
+
+/*
+    Mat RM[m_cam], TV[m_cam];  // camera R, T relative to the first cam
+    RM[0] = R[0];      // first cam serve as the world frame
+    RM[1] = R_21;
+    TV[0] = t[0];
+    TV[1] = t_21;
+*/
+
+    vector< vector <Point2f> > vec;  // rows - cams, cols - 3Dpoints; in pixel frame
+    vec.resize(m);
+    vector<Point3f> pts3D;
+    int n_pts = points3D.cols;
+    for (int i=0;i<n_pts;i++)
+    {
+        //if (mask.at<uchar>(i,0) != 0)
+        //{
+            vec[0].push_back(mask3D[0][i]);
+            vec[1].push_back(mask3D[1][i]);
+            vec[2].push_back(mask3D[2][i]);
+            Point3f p;
+            p.x = points3D.at<float>(0,i);
+            p.y = points3D.at<float>(1,i);
+            p.z = points3D.at<float>(2,i);
+            pts3D.push_back(p);
+        //}
+    }
+
+    //int n_pts = points3D.size();
+    Mat Rx[m],tx[m];
+    for(int i=0;i<m;i++){
+    	if(i==0){
+    	Rx[0] = R0;
+    	tx[0] = t0;
+    	}else{
+    		Rx[i] = R[i-1];
+    		tx[i] = t[i-1];
+    	}
+    }
+    bundle(Rx, tx, pts3D, vec, m, n_pts);
 
     /* ----------------------- Visualization with RViz --------------------------*/
     invertpose(R,t,_R,_t);
     /* transform rotation matrix to quaternion */
     r2q(_R,q0,q);
-    //cout << "Quaternion 1: "<< endl << "w: "<<q0.w()<<endl<<"vector: "<< endl<<q0.vec() << endl;
-   // cout << "Quaternion 2: "<< endl << "w: "<<q[0].w()<<endl<<"vector: "<< endl<<q[0].vec() << endl;
     while (ros::ok()){
-        viz(points3D,pub_pts,pub_cam,_t,mask,q,3);
+        viz(points3D,pub_pts,pub_cam,_t,q,3);
     }
 
     delete n_matches;
