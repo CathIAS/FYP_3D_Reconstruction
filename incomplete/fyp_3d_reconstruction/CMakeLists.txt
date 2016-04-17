@@ -146,7 +146,7 @@ catkin_package(
 # add_dependencies(fyp_3d_reconstruction ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(fyp_3d_reconstruction src/main.cpp src/global.cpp src/readInImages.cpp src/surf.cpp src/wrapper.cpp src/viz.cpp)
+add_executable(fyp_3d_reconstruction src/main.cpp src/global.cpp src/readInImages.cpp src/surf.cpp src/wrapper.cpp src/viz.cpp src/bundle.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
