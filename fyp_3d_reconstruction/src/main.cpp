@@ -55,7 +55,7 @@ int main(int argc, char** argv)
 
 
     /* Get folder path */ 
-    const string folder = "/home/xsunaf/FYP/FYP_3D_Reconstruction/photos/test-4";
+    const string folder = "/home/liuwx/git/FYP_3D_Reconstruction/photos/test-4";
     cout << "Folder path: " << folder << endl;
 
     /* Read in images from folder path */
@@ -197,14 +197,53 @@ int main(int argc, char** argv)
     		tx[i] = t[i-1];
     	}
     }
-    bundle(Rx, tx, pts3D, vec, m, n_pts);
+    Mat _Rx[m],_tx[m];
+    Quaterniond qx[m]; 								// orientation quaternions
+
+    /* ----------------------- Simulation ----------------------------*/
+/*
+    Mat Rs[m],ts[m];
+    vector<Point3f> pts3Ds;
+
+    Rs[0] = R0;
+    Rs[1] = R0;
+    Rs[2] = R0;
+
+    tx[0] = t0;
+    tx[1] = (Mat_<float>(3,1) << -0.5,0,0);
+    tx[2] = (Mat_<float>(3,1) << -1,0,0);
+    
+    Point3f p1(0.5,0,5);
+    Point3f p2(0.5,0.2,5);
+    Point3f p3(0.3,0.2,5);
+    Point3f p4(0.3,0,5);
+    Point3f p5(0.3,-0.2,5);
+    Point3f p6(0.5,-0.2,5);
+    Point3f p7(0.7,-0.2,5);
+    Point3f p8(0.7,0,5);
+    Point3f p9(0.7,0.2,5);
+    pts3Ds.push_back(p1);
+    pts3Ds.push_back(p2);
+    pts3Ds.push_back(p3);
+    pts3Ds.push_back(p4);
+    pts3Ds.push_back(p5);
+    pts3Ds.push_back(p6);
+    pts3Ds.push_back(p7);
+    pts3Ds.push_back(p8);
+    pts3Ds.push_back(p9);
+*/
+ 
+
+
+
+//    bundle(Rx, tx, pts3D, vec, m, n_pts);
 
     /* ----------------------- Visualization with RViz --------------------------*/
-    invertpose(R,t,_R,_t);
+    invertpose(Rx,tx,_Rx,_tx);
     /* transform rotation matrix to quaternion */
-    r2q(_R,q0,q);
+    r2q(_Rx,qx);
     while (ros::ok()){
-        viz(points3D,pub_pts,pub_cam,_t,q,m);
+        viz(pts3D,pub_pts,pub_cam,_tx,qx,m);
     }
 
     delete n_matches;

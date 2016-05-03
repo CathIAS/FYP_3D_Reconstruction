@@ -21,7 +21,7 @@
 void undistort(const cv::Mat img[], cv::Mat img_undist[], const cv::Mat cameraMatrix, const cv::Mat distCoeffs);
 
 
-void r2q(cv::Mat R[],Eigen::Quaterniond& q0,Eigen::Quaterniond q[]);
+void r2q(cv::Mat R[],Eigen::Quaterniond q[]);
 
 void triangulate_init(cv::Mat R, cv::Mat t,const std::vector< cv::Point2f > points_1,
 						const std::vector< cv::Point2f > points_2,cv::Mat& points4D,std::vector< cv::Point2f > mask3D[]);

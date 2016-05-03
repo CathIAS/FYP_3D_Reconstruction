@@ -22,6 +22,7 @@
 
 // convert from pixel fraame to image frame using camera matrix
 cv::Point2f pix2img(cv::Point2f pt_pix);
+cv::Point2f img2pix(cv::Point2f pt_img);
 
 // projection function Jacobian 2x3
 Eigen::MatrixXf cal_Jp( const Eigen::Matrix3f R, const Eigen::Vector3f T, const Eigen::Vector3f X);

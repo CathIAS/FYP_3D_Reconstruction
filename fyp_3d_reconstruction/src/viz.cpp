@@ -6,7 +6,7 @@
  */
 #include "viz.h"
 #include <iostream>
- void viz(const cv::Mat points3D,ros::Publisher& pub_pts,ros::Publisher& pub_cam,cv::Mat _t[],Eigen::Quaterniond q[],int num){
+ void viz(std::vector<cv::Point3f> pts3D,ros::Publisher& pub_pts,ros::Publisher& pub_cam,cv::Mat _t[],Eigen::Quaterniond q[],int num){
 
 	 	visualization_msgs::Marker pts_array;//, cam_1, cam_2;
 
@@ -98,23 +98,14 @@
 
         /* cameras are initialized with Markers::pose */
 
-
-        cam[0].pose.position.x = t0.at<float>(0);
-        cam[0].pose.position.y = t0.at<float>(1);
-        cam[0].pose.position.z = t0.at<float>(2);
-
-        cam[0].pose.orientation.x = q0.x();
-        cam[0].pose.orientation.y = q0.y();
-        cam[0].pose.orientation.z = q0.z();
-        cam[0].pose.orientation.w = q0.w();
-        for(int i = 1;i<num;i++){
-            cam[i].pose.position.x = _t[i-1].at<float>(0);
-            cam[i].pose.position.y = _t[i-1].at<float>(1);
-            cam[i].pose.position.z = _t[i-1].at<float>(2);
-            cam[i].pose.orientation.x = q[i-1].x();
-            cam[i].pose.orientation.y = q[i-1].y();
-            cam[i].pose.orientation.z = q[i-1].z();
-            cam[i].pose.orientation.w = q[i-1].w();
+        for(int i = 0;i<num;i++){
+            cam[i].pose.position.x = _t[i].at<float>(0);
+            cam[i].pose.position.y = _t[i].at<float>(1);
+            cam[i].pose.position.z = _t[i].at<float>(2);
+            cam[i].pose.orientation.x = q[i].x();
+            cam[i].pose.orientation.y = q[i].y();
+            cam[i].pose.orientation.z = q[i].z();
+            cam[i].pose.orientation.w = q[i].w();
         }
 
         //cam_2.pose.position.x = _t[0].at<double>(0);
@@ -140,18 +131,15 @@
 */
         	int inlier_count = 0;
             int outlier_count = 0;
-            for (int i=0;i<points3D.cols;i++)
+            for (int i=0;i<pts3D.size();i++)
             {
-                //if (mask[0].at<uchar>(i,0) != 0)
-                {
                     geometry_msgs::Point p;
 
-                    p.x = points3D.at<float>(0,i);
-                    p.y = points3D.at<float>(1,i);
-                    p.z = points3D.at<float>(2,i);
+                    p.x = pts3D[i].x;
+                    p.y = pts3D[i].y;
+                    p.z = pts3D[i].z;
                     pts_array.points.push_back(p);
                     inlier_count++;
-                }
             }
 
         pub_pts.publish(pts_array);

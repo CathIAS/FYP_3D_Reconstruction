@@ -25,6 +25,20 @@ Point2f pix2img(Point2f pt_pix)
     return pt_img;
 }
 
+Point2f img2pix(Point2f pt_img)
+{
+    Point2f pt_pix;
+
+    float fx = camIntrinsic.at<float>(0,0);
+    float fy = camIntrinsic.at<float>(1,1);
+    float cx = camIntrinsic.at<float>(0,2);
+    float cy = camIntrinsic.at<float>(1,2);
+
+    pt_pix.x = pt_img.x * fx + cx;
+    pt_pix.y = pt_img.y * fy + cy;
+
+    return pt_pix;
+}
 
 /* Calculate projection Jacobian matrix*/
 /*
@@ -441,7 +455,7 @@ void bundle(cv::Mat R[], cv::Mat T[], std::vector<Point3f>& pts3, const std::vec
 
     /* ---------------------------------------------------------------------------- */
 
-    int it = 3;
+    int it = 20;
     cout << "----------------------------" << endl;
     cout << "Entering iterations" << endl;
     cout << "Number of iterations to go through: " << it << endl << endl;
@@ -584,6 +598,12 @@ void bundle(cv::Mat R[], cv::Mat T[], std::vector<Point3f>& pts3, const std::vec
 
     err_sum = err.dot(err);
     cout << "sum of square errors after loop " << loop+1 << ": " << err_sum << endl << endl;
+
+    /*
+    invertpose(Rx,tx,_Rx,_tx);
+    r2q(_Rx,qx);
+    viz(pts3D,pub_pts,pub_cam,_tx,qx,m);
+*/
 
 
     loop++;

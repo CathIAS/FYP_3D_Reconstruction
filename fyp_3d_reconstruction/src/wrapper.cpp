@@ -13,18 +13,14 @@ void undistort(const cv::Mat img[], cv::Mat img_undist[], const cv::Mat cameraMa
     }
 }
 
-void r2q( cv::Mat _R[] ,Eigen::Quaterniond& q0,Eigen::Quaterniond q[] ){
+void r2q( cv::Mat _R[] ,Eigen::Quaterniond q[] ){
 
     Eigen::Matrix3d R_eigen;
-    cv::cv2eigen(R0,R_eigen);
-    q0 = R_eigen;
-    q0.normalize();
-    std::cout << "Quaternion0: "<< std::endl << "w: "<<q0.w()<<std::endl<<"vector: "<< std::endl<<q0.vec() << std::endl;
-    for(int i=0;i<(m-1);i++){
+    for(int i=0;i<m;i++){
         cv::cv2eigen(_R[i],R_eigen);
         q[i]=R_eigen;
         q[i].normalize();
-        std::cout << "Quaternion"<<i+1<<": "<< std::endl << "w: "<<q[i].w()<<std::endl<<"vector: "<< std::endl<<q[i].vec() << std::endl;
+        std::cout << "Quaternion"<<i<<": "<< std::endl << "w: "<<q[i].w()<<std::endl<< std::endl<<q[i].vec() << std::endl;
     }
 }
 
@@ -262,16 +258,16 @@ void PnP(const std::vector< cv::DMatch > good_matches[],const int add,const std:
 
 
 void invertpose(const cv::Mat R[], cv::Mat t[],cv:: Mat _R[], cv::Mat _t[] ){
-    std::cout << "Rotation Matrix0 : " << std::endl << " " << R0 << std::endl;
-    std::cout << "Translation0 : " << std::endl << " " << t0 << std::endl;
-	for(int i = 0;i< (m-1);i++){
+//    std::cout << "Rotation Matrix0 : " << std::endl << " " << R0 << std::endl;
+//    std::cout << "Translation0 : " << std::endl << " " << t0 << std::endl;
+	for(int i = 0;i<m;i++){
 	    // Obtain inverse:
 	    _R[i] = R[i].inv();
 	    _t[i] = -1 * _R[i] * t[i];
-	    std::cout << "Rotation Matrix"<<i+1<< ": " << std::endl << " " << R[i] << std::endl;
-	    std::cout << "__Rotation Matrix"<<i+1<< ": " << std::endl << " " << _R[i] << std::endl;
-	    std::cout << "Translation"<<i+1<< ": " << std::endl << " " << t[i] << std::endl;
-	    std::cout << "__Translation"<<i+1<< ": " << std::endl << " " << _t[i] << std::endl;
+	    std::cout << "Rotation Matrix"<<i<< ": " << std::endl << " " << R[i] << std::endl;
+//	    std::cout << "__Rotation Matrix"<<i+1<< ": " << std::endl << " " << _R[i] << std::endl;
+	    std::cout << "Translation"<<i<< ": " << std::endl << " " << t[i] << std::endl;
+//	    std::cout << "__Translation"<<i+1<< ": " << std::endl << " " << _t[i] << std::endl;
 	}
 
 }
