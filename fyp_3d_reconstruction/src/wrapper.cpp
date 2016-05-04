@@ -20,7 +20,7 @@ void r2q( cv::Mat _R[] ,Eigen::Quaterniond q[] ){
         cv::cv2eigen(_R[i],R_eigen);
         q[i]=R_eigen;
         q[i].normalize();
-        std::cout << "Quaternion"<<i<<": "<< std::endl << "w: "<<q[i].w()<<std::endl<< std::endl<<q[i].vec() << std::endl;
+//        std::cout << "Quaternion"<<i<<": "<< std::endl << "w: "<<q[i].w()<<std::endl<< std::endl<<q[i].vec() << std::endl;
     }
 }
 
@@ -264,10 +264,10 @@ void invertpose(const cv::Mat R[], cv::Mat t[],cv:: Mat _R[], cv::Mat _t[] ){
 	    // Obtain inverse:
 	    _R[i] = R[i].inv();
 	    _t[i] = -1 * _R[i] * t[i];
-	    std::cout << "Rotation Matrix"<<i<< ": " << std::endl << " " << R[i] << std::endl;
-//	    std::cout << "__Rotation Matrix"<<i+1<< ": " << std::endl << " " << _R[i] << std::endl;
-	    std::cout << "Translation"<<i<< ": " << std::endl << " " << t[i] << std::endl;
-//	    std::cout << "__Translation"<<i+1<< ": " << std::endl << " " << _t[i] << std::endl;
+//	    std::cout << "Rotation Matrix"<<i<< ": " << std::endl << " " << R[i] << std::endl;
+//	    std::cout << "__Rotation Matrix"<<i<< ": " << std::endl << " " << _R[i] << std::endl;
+//	    std::cout << "Translation"<<i<< ": " << std::endl << " " << t[i] << std::endl;
+//	    std::cout << "__Translation"<<i<< ": " << std::endl << " " << _t[i] << std::endl;
 	}
 
 }

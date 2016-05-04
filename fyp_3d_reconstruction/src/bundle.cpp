@@ -413,6 +413,7 @@ void bundle(cv::Mat R[], cv::Mat T[], std::vector<Point3f>& pts3, const std::vec
     for (int i=0; i<m_cam; i++)
         cv::Rodrigues(R[i], theta[i]);
 
+    cout << "1111111111111111111111" << endl;
     Matrix3f Rot[m_cam];   // Eigen rotation matrix
     Vector3f Theta[m_cam];   // Eigen rotation vector
     Vector3f Tra[m_cam];   // Eigen translation vector
@@ -420,11 +421,13 @@ void bundle(cv::Mat R[], cv::Mat T[], std::vector<Point3f>& pts3, const std::vec
     /* get Eigen from Mat */
     toEigen(R, T, theta, pts3, Rot, Theta, Tra, P3, m_cam, n_pts);
 
+    cout << "2222222222222222222222" << endl;
     vector< vector<Point2f> > rep;  // vector of reprojection points (mxn)
     vector< vector<Point2f> > z_img;  // vector of observation in image frame
     /* obtain observation vectors */
     z_img = getObservation(z, m_cam, n_pts);
 
+    cout << "3333333333333333333333" << endl;
     int n_row = 2 * m_cam * n_pts;  // size of error vector
     int n_col = 6*m_cam + 3*n_pts;  // size of state vector
     
@@ -433,6 +436,7 @@ void bundle(cv::Mat R[], cv::Mat T[], std::vector<Point3f>& pts3, const std::vec
     float ini_err_sum;  // initial error sum
     float err_ded;  // error deduction rate
 
+    cout << "4444444444444444444444" << endl;
     SparseMatrix<float> J(n_row, n_col);  // Jacobian matrix init
     SparseMatrix<float> H(n_col, n_col);   // Hessian Matrix
     VectorXf b(n_col);    // vector b
@@ -455,7 +459,7 @@ void bundle(cv::Mat R[], cv::Mat T[], std::vector<Point3f>& pts3, const std::vec
 
     /* ---------------------------------------------------------------------------- */
 
-    int it = 20;
+    int it = 1;
     cout << "----------------------------" << endl;
     cout << "Entering iterations" << endl;
     cout << "Number of iterations to go through: " << it << endl << endl;
@@ -568,11 +572,13 @@ void bundle(cv::Mat R[], cv::Mat T[], std::vector<Point3f>& pts3, const std::vec
 //    MatrixXf Id = MatrixXf::Identity(6,6);
 //    H.block(0,0,6,6) = H.block(0,0,6,6) + Id;  // fix the first camera
 
-    SparseMatrix<float> Id(n_col, n_col);
-    Id.setIdentity();
-    float lamda = 5e-1;
-    H = lamda * Id + H;
+//    SparseMatrix<float> Id(n_col, n_col);
+//    Id.setIdentity();
+//    float lamda = 5e-4;
+//    H = lamda * Id + H;
 
+    for (int i=0;i<12;i++)
+        H.coeffRef(i,i) += 1;
 
     float begin = clock();
 

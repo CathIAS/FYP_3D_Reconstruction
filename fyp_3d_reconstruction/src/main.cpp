@@ -84,14 +84,14 @@ int main(int argc, char** argv)
     undistort(img, img_undist, camIntrinsic, dist);
 
     /* SURF detector for features and matching*/
-    surf(img_undist, good_matches,keypoints, points, pointsCompare, 400, img_matches);
+    surf(img_undist, good_matches,keypoints, points, pointsCompare, 3000, img_matches);
 
     /* find essential matrix using five-point algorithm with RANSAC */
     E= findEssentialMat(points[0], pointsCompare[0], camIntrinsic, RANSAC, 0.999, 1.0, mask);
 
     /* use cheirality check to obtain R, t */
     recoverPose(E, points[0], pointsCompare[0], camIntrinsic, R[0], t[0], mask);
-    t[0] = 0.552 * t[0];
+    t[0] = 0.448 * t[0];
 
     // mask out wrong 2d points
     vector< Point2f > pointsx,pointsComparex;
@@ -142,21 +142,18 @@ int main(int argc, char** argv)
     // get R and t of the newest cam
     PnP(good_matches,2,keypoints,R,t,points,pointsCompare,mask3D,img_matches[1]);
     std::cout<< "-------------------------------" << std::endl;
-
     // take deducted matches and triangulate
     add_Points(R,t,points,pointsCompare,points3D,2,mask3D,img_matches[1]);
-
     std::cout<<points3D.cols<<std::endl;
 
+/* TODO: 
     // get R and t of the newest cam
-    //PnP(good_matches,3,keypoints,R,t,points,pointsCompare,mask3D,img_matches[1]);
-    //std::cout<< "-------------------------------" << std::endl;
-
+    PnP(good_matches,3,keypoints,R,t,points,pointsCompare,mask3D,img_matches[1]);
+    std::cout<< "-------------------------------" << std::endl;
     // take deducted matches and triangulate
-   // add_Points(R,t,points,pointsCompare,points3D,3,mask3D,img_matches[1]);
-
-    //std::cout<<points3D.cols<<std::endl;
-
+    add_Points(R,t,points,pointsCompare,points3D,3,mask3D,img_matches[1]);
+    std::cout<<points3D.cols<<std::endl;
+*/
     /* ------------------- FOR BUNDLE ADJUSTMENT TEST -------------------- */
 
 /*
@@ -200,18 +197,34 @@ int main(int argc, char** argv)
     Mat _Rx[m],_tx[m];
     Quaterniond qx[m]; 								// orientation quaternions
 
+    bundle(Rx, tx, pts3D, vec, m, n_pts);
+
+    
     /* ----------------------- Simulation ----------------------------*/
 /*
-    Mat Rs[m],ts[m];
+    cout << "##################################" << endl;
+    cout << "Entering Simulation" << endl;
+
+
+    int m_cams = 3;
+    int n_ptss = 18;
+    Mat Rs[m_cams],ts[m_cams];
+    Mat _Rs[m_cams],_ts[m_cams];
+    Quaterniond qs[m_cams]; 								// orientation quaternions
     vector<Point3f> pts3Ds;
+    Mat thetas[m_cams];   // rotation vector
+    vector< vector<Point2f> > imgs;  // vector of reprojection points (mxn)
+    vector< vector<Point2f> > pixs;  // vector of reprojection points (mxn)
+    imgs.resize(m_cams);
+    pixs.resize(m_cams);
 
     Rs[0] = R0;
     Rs[1] = R0;
     Rs[2] = R0;
 
-    tx[0] = t0;
-    tx[1] = (Mat_<float>(3,1) << -0.5,0,0);
-    tx[2] = (Mat_<float>(3,1) << -1,0,0);
+    ts[0] = t0;
+    ts[1] = (Mat_<float>(3,1) << -0.5,0,0);
+    ts[2] = (Mat_<float>(3,1) << -1,0,0);
     
     Point3f p1(0.5,0,5);
     Point3f p2(0.5,0.2,5);
@@ -222,6 +235,15 @@ int main(int argc, char** argv)
     Point3f p7(0.7,-0.2,5);
     Point3f p8(0.7,0,5);
     Point3f p9(0.7,0.2,5);
+    Point3f p11(0.5,0,5.1);
+    Point3f p12(0.5,0.2,5.1);
+    Point3f p13(0.3,0.2,5.1);
+    Point3f p14(0.3,0,5.1);
+    Point3f p15(0.3,-0.2,5.1);
+    Point3f p16(0.5,-0.2,5.1);
+    Point3f p17(0.7,-0.2,5.1);
+    Point3f p18(0.7,0,5.1);
+    Point3f p19(0.7,0.2,5.1);
     pts3Ds.push_back(p1);
     pts3Ds.push_back(p2);
     pts3Ds.push_back(p3);
@@ -231,13 +253,84 @@ int main(int argc, char** argv)
     pts3Ds.push_back(p7);
     pts3Ds.push_back(p8);
     pts3Ds.push_back(p9);
-*/
- 
+    pts3Ds.push_back(p11);
+    pts3Ds.push_back(p12);
+    pts3Ds.push_back(p13);
+    pts3Ds.push_back(p14);
+    pts3Ds.push_back(p15);
+    pts3Ds.push_back(p16);
+    pts3Ds.push_back(p17);
+    pts3Ds.push_back(p18);
+    pts3Ds.push_back(p19);
+
+    // get theta from R 
+    for (int i=0; i<m_cams; i++)
+        cv::Rodrigues(Rs[i], thetas[i]);
+    Matrix3f Rots[m_cams];   // Eigen rotation matrix
+    Vector3f Thetas[m_cams];   // Eigen rotation vector
+    Vector3f Tras[m_cams];   // Eigen translation vector
+    Vector3f P3s[n_ptss];   // Eigen 3D point vector
+    // get Eigen from Mat 
+    toEigen(Rs, ts, thetas, pts3Ds, Rots, Thetas, Tras, P3s, m_cams, n_ptss);
+    
+    // get projection of the simulation points onto unit image plane 
+    imgs = getReprojection(Thetas, Tras, P3s, m_cams, n_ptss);
+    // get projection on pixel frame 
+    for (int i=0;i<m_cams;i++){
+        for (int j=0;j<n_ptss;j++){
+            Point2f p;
+            p = img2pix(imgs[i][j]);
+            pixs[i].push_back(p);
+        }
+    }
+    
+
+//    cout << "2D points observation (pixel frame) on 1st cam: " << endl;
+//    for (int i=0;i<n_ptss;i++)
+//    cout << pixs[0][i].x << "," << pixs[0][i].y << endl;
+//    cout << endl;
+//    cout << "2D points observation (pixel frame) on 2st cam: " << endl;
+//    for (int i=0;i<n_ptss;i++)
+//    cout << pixs[1][i].x << "," << pixs[1][i].y << endl;
+//    cout << endl;
+//    cout << "2D points observation (pixel frame) on 3st cam: " << endl;
+//   for (int i=0;i<n_ptss;i++)
+//   cout << pixs[2][i].x << "," << pixs[2][i].y << endl;
+//    cout << endl;
 
 
+    vector< vector <Point2f> > vecs;  // rows - cams, cols - 3Dpoints; in pixel frame
+    vecs.resize(m_cams);
+    for (int i=0;i<n_pts;i++)
+    {
+            vecs[0].push_back(pixs[0][i]);
+            vecs[1].push_back(pixs[1][i]);
+            vecs[2].push_back(pixs[2][i]);
+    }
 
-//    bundle(Rx, tx, pts3D, vec, m, n_pts);
 
+    pts3Ds[0].x += 0.5;
+    pts3Ds[1].y += 0.3;
+    pts3Ds[2].z -= 0.2;
+    pts3Ds[5].x += 0.6;
+    pts3Ds[11].y -= 0.4;
+    pts3Ds[13].x += 0.1;
+    pts3Ds[17].x += 1;
+
+
+//    for (int i=0;i<n_ptss;i++)
+//        pts3Ds[i].x += 3;
+
+    ts[2].at<float>(1) += 0.5;
+
+    Mat theta_e = (Mat_<float>(3,1) << -0.56, 0.91, 0.13);
+    Mat R_e;
+    Rodrigues(theta_e, R_e);
+    Rs[2] = Rs[2] * R_e;
+    
+    bundle(Rs, ts, pts3Ds, vecs, m_cams, n_ptss);
+*/    
+    
     /* ----------------------- Visualization with RViz --------------------------*/
     invertpose(Rx,tx,_Rx,_tx);
     /* transform rotation matrix to quaternion */

@@ -55,9 +55,9 @@
         //cam_1.type = visualization_msgs::Marker::ARROW;
         //cam_2.type = visualization_msgs::Marker::ARROW;
         /////////////////////////////////////////////////////////////////
-        pts_array.scale.x = 0.01;
-        pts_array.scale.y = 0.01;
-        pts_array.scale.z = 0.01;
+        pts_array.scale.x = 0.015;
+        pts_array.scale.y = 0.015;
+        pts_array.scale.z = 0.015;
 
         for(int i = 0;i<num;i++){
         	cam[i].scale.x = 0.1;
