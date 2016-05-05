@@ -55,7 +55,8 @@ int main(int argc, char** argv)
 
 
     /* Get folder path */ 
-    const string folder = "/home/liuwx/git/FYP_3D_Reconstruction/photos/test-4";
+    //const string folder = "/home/liuwx/git/FYP_3D_Reconstruction/photos/test-4";
+    const string folder = "/home/xsunaf/FYP/FYP_3D_Reconstruction/photos/test-4";
     cout << "Folder path: " << folder << endl;
 
     /* Read in images from folder path */
@@ -72,10 +73,13 @@ int main(int argc, char** argv)
     Mat img_matches[m-1];  								// img with matches for display
     Mat E;  										// essential matrix
     Mat mask; 										// mask for inliers after RANSAC
-    Mat R[m-1],_R[m-1],t[m-1],_t[m-1]; 								// rotation matrices, cam translations
-    Quaterniond q[m-1]; 								// orientation quaternions
+    Mat R[m],_R[m],t[m],_t[m]; 								// rotation matrices, cam translations
+    Quaterniond q[m]; 								// orientation quaternions
     n_matches = new int[m-1];
     mid = m/2;
+
+    R[0]=(Mat_<float>(3,3) << 1,0,0,0,1,0,0,0,1);
+    t[0]=(Mat_<float>(3,1) << 0,0,0);
 
 
     /* ------------------------- 3D Reconstruction -------------------------- */
@@ -90,8 +94,8 @@ int main(int argc, char** argv)
     E= findEssentialMat(points[0], pointsCompare[0], camIntrinsic, RANSAC, 0.999, 1.0, mask);
 
     /* use cheirality check to obtain R, t */
-    recoverPose(E, points[0], pointsCompare[0], camIntrinsic, R[0], t[0], mask);
-    t[0] = 0.448 * t[0];
+    recoverPose(E, points[0], pointsCompare[0], camIntrinsic, R[1], t[1], mask);
+    t[1] = 0.448 * t[1];
 
     // mask out wrong 2d points
     vector< Point2f > pointsx,pointsComparex;
@@ -121,7 +125,7 @@ int main(int argc, char** argv)
     //@brief Reconstructs points by triangulation.
     //Keep in mind that all input data should be of float type in order for this function to work.
 
-    triangulate_init(R[0],t[0],pointsx,pointsComparex,points4D,mask3D);
+    triangulate_init(R[1],t[1],pointsx,pointsComparex,points4D,mask3D);
 
     // 4d to 3d
     Mat points3D(3,points4D.cols,CV_32F);
@@ -179,22 +183,10 @@ int main(int argc, char** argv)
         p.z = points3D.at<float>(2,i);
         pts3D.push_back(p);
     }
-
-    //int n_pts = points3D.size();
-    Mat Rx[m],tx[m];
-    for(int i=0;i<m;i++){
-    	if(i==0){
-    	Rx[0] = R0;
-    	tx[0] = t0;
-    	}else{
-    		Rx[i] = R[i-1];
-    		tx[i] = t[i-1];
-    	}
-    }
-    Mat _Rx[m],_tx[m];
-    Quaterniond qx[m]; 								// orientation quaternions
-
-    bundle(Rx, tx, pts3D, vec, m, n_pts);
+for(int i = 0;i<m;i++){
+    cout<<"R"<<i<<"= "<<R[i]<<endl;
+}
+    bundle(R, t, pts3D, vec, m, n_pts);
 
     
     /* ----------------------- Simulation ----------------------------*/
@@ -329,11 +321,11 @@ int main(int argc, char** argv)
 */
     
     /* ----------------------- Visualization with RViz --------------------------*/
-    invertpose(Rx,tx,_Rx,_tx);
+    invertpose(R,t,_R,_t);
     /* transform rotation matrix to quaternion */
-    r2q(_Rx,qx);
+    r2q(_R,q);
     while (ros::ok()){
-        viz(pts3D,pub_pts,pub_cam,_tx,qx,m);
+        viz(pts3D,pub_pts,pub_cam,_t,q,m);
     }
 
     delete n_matches;

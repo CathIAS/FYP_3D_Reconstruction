@@ -76,16 +76,16 @@ void add_Points( cv::Mat R[],cv::Mat t[],const std::vector< cv::Point2f > points
 
 		cv::Mat projMatr1(3,4,CV_32F);
 		cv::Mat Rt1(3,4,CV_32F);  // Rt = [R | t]
-		R[add-2].convertTo(R[add-2],CV_32F);
-		t[add-2].convertTo(t[add-2],CV_32F);
-		hconcat(R[add-2], t[add-2], Rt1);  // Rt concatenate
+		R[add-1].convertTo(R[add-1],CV_32F);
+		t[add-1].convertTo(t[add-1],CV_32F);
+		hconcat(R[add-1], t[add-1], Rt1);  // Rt concatenate
 		projMatr1 = camIntrinsic * Rt1;
 
         cv::Mat projMatr2(3,4,CV_32F);
         cv::Mat Rt(3,4,CV_32F);  // Rt = [R | t]
-        R[add-1].convertTo(R[add-1],CV_32F);
-        t[add-1].convertTo(t[add-1],CV_32F);
-        hconcat(R[add-1], t[add-1], Rt);  // Rt concatenate
+        R[add].convertTo(R[add],CV_32F);
+        t[add].convertTo(t[add],CV_32F);
+        hconcat(R[add], t[add], Rt);  // Rt concatenate
         projMatr2 = camIntrinsic * Rt;
 
        // std::cout<<Rt<<std::endl<<projMatr.rows<<projMatr.cols<<std::endl;
@@ -195,17 +195,17 @@ void PnP(const std::vector< cv::DMatch > good_matches[],const int add,const std:
 		}
 		else{
 		cv::Mat Rt1(3,4,CV_32F);  // Rt = [R | t]
-		R[add-3].convertTo(R[add-3],CV_32F);
-		t[add-3].convertTo(t[add-3],CV_32F);
-		hconcat(R[add-3], t[add-3], Rt1);  // Rt concatenate
+		R[add-2].convertTo(R[add-2],CV_32F);
+		t[add-2].convertTo(t[add-2],CV_32F);
+		hconcat(R[add-2], t[add-2], Rt1);  // Rt concatenate
 
 		projMatr1 = camIntrinsic * Rt1;
 		}
 	        cv::Mat projMatr2(3,4,CV_32F);
 	        cv::Mat Rt(3,4,CV_32F);  // Rt = [R | t]
-	        R[add-2].convertTo(R[add-2],CV_32F);
-	        t[add-2].convertTo(t[add-2],CV_32F);
-	        hconcat(R[add-2], t[add-2], Rt);  // Rt concatenate
+	        R[add-1].convertTo(R[add-1],CV_32F);
+	        t[add-1].convertTo(t[add-1],CV_32F);
+	        hconcat(R[add-1], t[add-1], Rt);  // Rt concatenate
 	        projMatr2 = camIntrinsic * Rt;
 //	        std::cout<<Rt<<std::endl;
 
@@ -256,13 +256,14 @@ void PnP(const std::vector< cv::DMatch > good_matches[],const int add,const std:
 
 	        cv::Mat Rv;
 	        cv::Mat inlier;
-	        solvePnPRansac(points3Dtemp,points3,camIntrinsic,dist,Rv,t[add-1],false,100,1.0,0.999,inlier);
+	        solvePnPRansac(points3Dtemp,points3,camIntrinsic,dist,Rv,t[add],false,100,1.0,0.999,inlier);
 	        int n_inl = countNonZero(inlier);
 	        std::cout<<"number of inliers in PnP: "<<n_inl<<std::endl;
 
-	        Rodrigues(Rv,R[add-1]);
+	        Rodrigues(Rv,R[add]);
+
 	        //std::cout<<"5555555555555555555555555555555"<<std::endl;
-//	        std::cout<<"R after pnp: "<<R[add-1]<<std::endl;
+	        std::cout<<"R after pnp: "<<R[add]<<std::endl;
 //	        std::cout<<"t after pnp: "<<t[add-1]<<std::endl;
 
 }
