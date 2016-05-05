@@ -55,8 +55,8 @@ int main(int argc, char** argv)
 
 
     /* Get folder path */ 
-    //const string folder = "/home/liuwx/git/FYP_3D_Reconstruction/photos/test-4";
-    const string folder = "/home/xsunaf/FYP/FYP_3D_Reconstruction/photos/test-4";
+    const string folder = "/home/liuwx/git/FYP_3D_Reconstruction/photos/test-4";
+    //const string folder = "/home/xsunaf/FYP/FYP_3D_Reconstruction/photos/test-4";
     cout << "Folder path: " << folder << endl;
 
     /* Read in images from folder path */
@@ -168,25 +168,9 @@ int main(int argc, char** argv)
     TV[1] = t_21;
 */
 
-    vector< vector <Point2f> > vec;  // rows - cams, cols - 3Dpoints; in pixel frame
-    vec.resize(m);
-    vector<Point3f> pts3D;
     int n_pts = points3D.cols;
-    for (int i=0;i<n_pts;i++)
-    {
-        for (int j=0;j<m;j++)
-            vec[j].push_back(mask3D[j][i]);
-        
-        Point3f p;
-        p.x = points3D.at<float>(0,i);
-        p.y = points3D.at<float>(1,i);
-        p.z = points3D.at<float>(2,i);
-        pts3D.push_back(p);
-    }
-for(int i = 0;i<m;i++){
-    cout<<"R"<<i<<"= "<<R[i]<<endl;
-}
-    bundle(R, t, pts3D, vec, m, n_pts);
+
+    bundle(R, t, points3D, mask3D, m, n_pts);
 
     
     /* ----------------------- Simulation ----------------------------*/
@@ -325,7 +309,7 @@ for(int i = 0;i<m;i++){
     /* transform rotation matrix to quaternion */
     r2q(_R,q);
     while (ros::ok()){
-        viz(pts3D,pub_pts,pub_cam,_t,q,m);
+        viz(points3D,pub_pts,pub_cam,_t,q,m);
     }
 
     delete n_matches;

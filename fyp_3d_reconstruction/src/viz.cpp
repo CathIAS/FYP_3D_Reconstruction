@@ -6,7 +6,7 @@
  */
 #include "viz.h"
 #include <iostream>
- void viz(std::vector<cv::Point3f> pts3D,ros::Publisher& pub_pts,ros::Publisher& pub_cam,cv::Mat _t[],Eigen::Quaterniond q[],int num){
+ void viz(cv::Mat points3D,ros::Publisher& pub_pts,ros::Publisher& pub_cam,cv::Mat _t[],Eigen::Quaterniond q[],int num){
 
 	 	visualization_msgs::Marker pts_array;//, cam_1, cam_2;
 
@@ -131,13 +131,13 @@
 */
         	int inlier_count = 0;
             int outlier_count = 0;
-            for (int i=0;i<pts3D.size();i++)
+            for (int i=0;i<points3D.cols;i++)
             {
                     geometry_msgs::Point p;
 
-                    p.x = pts3D[i].x;
-                    p.y = pts3D[i].y;
-                    p.z = pts3D[i].z;
+                    p.x = points3D.at<float>(0,i);
+                    p.y = points3D.at<float>(1,i);
+                    p.z = points3D.at<float>(2,i);
                     pts_array.points.push_back(p);
                     inlier_count++;
             }

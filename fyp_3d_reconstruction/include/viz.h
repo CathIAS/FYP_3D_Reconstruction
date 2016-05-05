@@ -11,6 +11,6 @@
 #include <visualization_msgs/Marker.h>
 #include "global.h"
 #include <ros/ros.h>
-void viz(std::vector<cv::Point3f> pts3D,ros::Publisher& pub_pts,ros::Publisher& pub_cam,cv::Mat _t[],Eigen::Quaterniond q[],int num);
+void viz(cv::Mat points3D,ros::Publisher& pub_pts,ros::Publisher& pub_cam,cv::Mat _t[],Eigen::Quaterniond q[],int num);
 
 #endif /* FYP_3D_RECONSTRUCTION_INCLUDE_VIZ_H_ */

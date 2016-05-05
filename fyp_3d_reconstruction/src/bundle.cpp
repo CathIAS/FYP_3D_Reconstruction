@@ -380,7 +380,7 @@ void increX( const VectorXf& del_x, Vector3f Theta[], Matrix3f Rot[], Vector3f T
 
 /* =================================================================================== */
 
-void bundle(cv::Mat R[], cv::Mat T[], std::vector<Point3f>& pts3, const std::vector< std::vector<cv::Point2f> >& z, int m_cam, int n_pts)
+void bundle(cv::Mat R[], cv::Mat T[], cv::Mat& points3D, const std::vector<cv::Point2f> mask3D[], int m_cam, int n_pts)
 {
 
     /* ---------------------------- Input confirmation ---------------------------- */
@@ -407,6 +407,21 @@ void bundle(cv::Mat R[], cv::Mat T[], std::vector<Point3f>& pts3, const std::vec
 
     cout << "----------------------------" << endl;
     cout << "initializing variables" << endl;
+
+    vector<Point3f> pts3;
+    vector< vector <Point2f> > z;  // rows - cams, cols - 3Dpoints; in pixel frame
+    z.resize(m);
+    for (int i=0;i<n_pts;i++)
+    {
+        for (int j=0;j<m;j++)
+            z[j].push_back(mask3D[j][i]);
+        
+        Point3f p;
+        p.x = points3D.at<float>(0,i);
+        p.y = points3D.at<float>(1,i);
+        p.z = points3D.at<float>(2,i);
+        pts3.push_back(p);
+    }
 
     Mat theta[m_cam];   // rotation vector
     /* get theta from R */
@@ -630,6 +645,13 @@ void bundle(cv::Mat R[], cv::Mat T[], std::vector<Point3f>& pts3, const std::vec
     cout << "=========================================" << endl;
 
     toCV(R, T, theta, pts3, Rot, Theta, Tra, P3, m_cam, n_pts);
+    for (int j=0;j<n_pts;j++)
+    {
+        points3D.at<float>(0,j) = pts3[j].x;
+        points3D.at<float>(1,j) = pts3[j].y;
+        points3D.at<float>(2,j) = pts3[j].z;
+    }
+
     cout << "Updated state variables returned" << endl << endl;
 
 }

@@ -57,7 +57,7 @@ void getJnH( const std::vector< std::vector<cv::Point2f> >& z, const Eigen::Matr
 void increX( const Eigen::VectorXf& del_x, Eigen::Vector3f Theta[], Eigen::Matrix3f Rot[], Eigen::Vector3f Tra[], Eigen::Vector3f P3[], int m_cam, int n_pts);
 
 // Bundle Adjustment main function
-void bundle(cv::Mat R[], cv::Mat T[], std::vector<cv::Point3f>& pts3, const std::vector< std::vector<cv::Point2f> >& z, int m_cam, int n_pts);
+void bundle(cv::Mat R[], cv::Mat T[], cv::Mat& points3D, const std::vector<cv::Point2f> mask3D[], int m_cam, int n_pts);
 
 // Cam - K: camera matrix, R[]: rotation matrices, T[]: translations
 // Points - points3D (vector)
