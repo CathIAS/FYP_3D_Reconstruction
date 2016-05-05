@@ -41,7 +41,8 @@ void triangulate_init( cv::Mat R, cv::Mat t,const std::vector< cv::Point2f > poi
         for(int i = 0;i<points4D.cols;i++){
         	mask3D[0].push_back(points_1[i]);
         	mask3D[1].push_back(points_2[i]);
-        	mask3D[2].push_back(x);
+            for (int j=2;j<m;j++)
+        	    mask3D[j].push_back(x);
         }
 
 }
@@ -62,7 +63,8 @@ void add_Points( cv::Mat R[],cv::Mat t[],const std::vector< cv::Point2f > points
     }
     std::cout<<"mask result: "<<points_1[add-1].size()<<"	"<<pointsx.size()<<std::endl;
 
-  /*  for (int j=0; j<points_1[add-1].size();j++){
+    /*
+    for (int j=0; j<points_1[add-1].size();j++){
                     if (mask.at<uchar>(j,0) != 0)
                         circle(img_matches, points_1[add-1][j], 10, cv::Scalar(0,0,255), 3);
                 }
@@ -91,9 +93,15 @@ void add_Points( cv::Mat R[],cv::Mat t[],const std::vector< cv::Point2f > points
         cv::triangulatePoints(projMatr1, projMatr2, pointsx, pointsComparex, points4Dtemp);
         cv::Point2f x(-1,-1);
         for(int i = 0;i<points4Dtemp.cols;i++){
-        	mask3D[0].push_back(x);
-        	mask3D[1].push_back(pointsx[i]);
-        	mask3D[2].push_back(pointsComparex[i]);
+            for (int j=0;j<m;j++)
+            {
+                if (j == (add-1))
+                    mask3D[j].push_back(pointsx[i]);
+                else if (j == add)
+        	        mask3D[j].push_back(pointsComparex[i]);
+                else
+                    mask3D[j].push_back(x);
+            }
         }
         cv::Mat points3Dtemp(3,pointsx.size(),CV_32F);
 
@@ -110,6 +118,7 @@ void add_Points( cv::Mat R[],cv::Mat t[],const std::vector< cv::Point2f > points
 void PnP(const std::vector< cv::DMatch > good_matches[],const int add,const std::vector<cv::KeyPoint> keypoints[],
 		cv::Mat R[], cv::Mat t[],std::vector< cv::Point2f > points_1[], std::vector< cv::Point2f > points_2[],std::vector< cv::Point2f > mask3D[],cv::Mat& img_matches){
 
+    std::cout << "-------------- Entering PnP ---------------" << std::endl;
 	std::vector<int> indicator(5,-1);
 	std::vector<cv::Point2f> points1,points2,points3;
 
@@ -130,8 +139,10 @@ void PnP(const std::vector< cv::DMatch > good_matches[],const int add,const std:
 
 	// assign points1, points2, points3; find common matches and update mask3d and points_2
 	for(int i = 0; i < good_matches[add-1].size();i++){
+
 		if(good_matches[add-1][i].queryIdx<indicator.size()){
 			int ind = good_matches[add-1][i].queryIdx;
+
 			if(indicator[ind]!=-1){
 
 				cv::Point2f temppoint = keypoints[add-2][good_matches[add-2][indicator[ind]].queryIdx].pt ;
@@ -139,7 +150,7 @@ void PnP(const std::vector< cv::DMatch > good_matches[],const int add,const std:
 
 				temppoint =keypoints[add-1][good_matches[add-2][indicator[ind]].trainIdx].pt;
 				std::vector<cv::Point2f>::iterator p = std::find(points_1[add-1].begin(), points_1[add-1].end(), temppoint);
-				std::vector<cv::Point2f>::iterator _p = std::find(mask3D[1].begin(), mask3D[1].end(), temppoint);
+				std::vector<cv::Point2f>::iterator _p = std::find(mask3D[add-1].begin(), mask3D[add-1].end(), temppoint);
 				points2.push_back(temppoint);
 
 				temppoint = keypoints[add][good_matches[add-1][i].trainIdx].pt;
@@ -147,9 +158,9 @@ void PnP(const std::vector< cv::DMatch > good_matches[],const int add,const std:
 				points3.push_back(temppoint);
 
 				// update mask3d info 3rd cam
-				if(_p!=mask3D[1].end()){
-					int nPosition = distance (mask3D[1].begin(), _p);
-					mask3D[2][nPosition] = temppoint;
+				if(_p!=mask3D[add-1].end()){
+					int nPosition = distance (mask3D[add-1].begin(), _p);
+                    mask3D[add][nPosition] = temppoint;
 				}
 
 				// delete common matches across 3 pics from points_1 and points_2

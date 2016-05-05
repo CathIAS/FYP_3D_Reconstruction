@@ -144,16 +144,16 @@ int main(int argc, char** argv)
     std::cout<< "-------------------------------" << std::endl;
     // take deducted matches and triangulate
     add_Points(R,t,points,pointsCompare,points3D,2,mask3D,img_matches[1]);
-    std::cout<<points3D.cols<<std::endl;
+    std::cout<<"number of 3D points after 3 cam: "<<points3D.cols<<std::endl;
 
-/* TODO: 
+
     // get R and t of the newest cam
-    PnP(good_matches,3,keypoints,R,t,points,pointsCompare,mask3D,img_matches[1]);
+    PnP(good_matches,3,keypoints,R,t,points,pointsCompare,mask3D,img_matches[2]);
     std::cout<< "-------------------------------" << std::endl;
     // take deducted matches and triangulate
-    add_Points(R,t,points,pointsCompare,points3D,3,mask3D,img_matches[1]);
-    std::cout<<points3D.cols<<std::endl;
-*/
+    add_Points(R,t,points,pointsCompare,points3D,3,mask3D,img_matches[2]);
+    std::cout<<"number of 3D points after 4 cam: "<<points3D.cols<<std::endl;
+
     /* ------------------- FOR BUNDLE ADJUSTMENT TEST -------------------- */
 
 /*
@@ -170,17 +170,14 @@ int main(int argc, char** argv)
     int n_pts = points3D.cols;
     for (int i=0;i<n_pts;i++)
     {
-        //if (mask.at<uchar>(i,0) != 0)
-        //{
-            vec[0].push_back(mask3D[0][i]);
-            vec[1].push_back(mask3D[1][i]);
-            vec[2].push_back(mask3D[2][i]);
-            Point3f p;
-            p.x = points3D.at<float>(0,i);
-            p.y = points3D.at<float>(1,i);
-            p.z = points3D.at<float>(2,i);
-            pts3D.push_back(p);
-        //}
+        for (int j=0;j<m;j++)
+            vec[j].push_back(mask3D[j][i]);
+        
+        Point3f p;
+        p.x = points3D.at<float>(0,i);
+        p.y = points3D.at<float>(1,i);
+        p.z = points3D.at<float>(2,i);
+        pts3D.push_back(p);
     }
 
     //int n_pts = points3D.size();
@@ -329,7 +326,7 @@ int main(int argc, char** argv)
     Rs[2] = Rs[2] * R_e;
     
     bundle(Rs, ts, pts3Ds, vecs, m_cams, n_ptss);
-*/    
+*/
     
     /* ----------------------- Visualization with RViz --------------------------*/
     invertpose(Rx,tx,_Rx,_tx);
