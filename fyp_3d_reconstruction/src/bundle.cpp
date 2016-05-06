@@ -299,14 +299,16 @@ void getJnH( const std::vector< std::vector<cv::Point2f> >& z, const Matrix3f Ro
           Jx = cal_Jx(Rot[k],Tra[k],P3[j]);
           Jc << Jr, Jt;
 
+          float thresh = 1e-6;
+
           w(1,0) = 0;
           w(0,1) = 0;
-          if (abs(err(row_index)) > 0.0001)
-            w(0,0) = 0.001/(0.001 + abs(err(row_index)));
+          if (abs(err(row_index)) > thresh)
+            w(0,0) = thresh/(abs(err(row_index)));
           else
             w(0,0) = 1;
-          if (abs(err(row_index + 1)) > 0.0001)
-            w(1,1) = 0.001/(0.001 + abs(err(row_index+1)));
+          if (abs(err(row_index + 1)) > thresh)
+            w(1,1) = thresh/(abs(err(row_index+1)));
           else
             w(1,1) = 1;
 
@@ -517,7 +519,7 @@ void bundle(cv::Mat R[], cv::Mat T[], cv::Mat& points3D, const std::vector<cv::P
     int count = 0;
     for (int i=0;i<n_row;i++)
     {
-        if (err(i) < 1e-3 && err(i) > 1e-4)
+        if (err(i) > 1e-4)
         {
    //         cout << err(i) << endl;
             count++;

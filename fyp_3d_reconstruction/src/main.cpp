@@ -89,7 +89,7 @@ int main(int argc, char** argv)
     surf(img_undist, good_matches,keypoints, points, pointsCompare, 4000, img_matches);
 
     /* find essential matrix using five-point algorithm with RANSAC */
-    E= findEssentialMat(points[0], pointsCompare[0], camIntrinsic, RANSAC, 0.999, 1.0, mask);
+    E= findEssentialMat(points[0], pointsCompare[0], camIntrinsic, RANSAC, 0.999, 0.5, mask);
 
     /* use cheirality check to obtain R, t */
     recoverPose(E, points[0], pointsCompare[0], camIntrinsic, R[1], t[1], mask);
@@ -138,7 +138,7 @@ int main(int argc, char** argv)
         // visualize front-end
         viz(points3D,pub_pts,pub_cam,t,R,q,i+1);
         // BA
-        bundle(R, t, points3D, mask3D, i+1, n, 4);
+        bundle(R, t, points3D, mask3D, i+1, n, 3);
         // visualize back-end
         viz(points3D,pub_pts,pub_cam,t,R,q,i+1);
     }
@@ -151,8 +151,18 @@ int main(int argc, char** argv)
     // visualize front-end
     viz(points3D,pub_pts,pub_cam,t,R,q,m);
     // BA
-    bundle(R, t, points3D, mask3D, m, n, 8);
-    
+    bundle(R, t, points3D, mask3D, m, n, 10);
+
+/*
+    cout << "mask3D: " << endl;
+    for (int i=0;i<n;i++){
+        for (int j=0;j<m;j++){
+            cout << mask3D[j][i]<<" ";
+        }
+        cout << endl;
+    }
+*/
+
     // finalize visualization
     while (ros::ok()){
         viz(points3D,pub_pts,pub_cam,t,R,q,m);
