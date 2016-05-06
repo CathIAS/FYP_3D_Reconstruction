@@ -6,9 +6,39 @@
  */
 #include "viz.h"
 #include <iostream>
- void viz(cv::Mat points3D,ros::Publisher& pub_pts,ros::Publisher& pub_cam,cv::Mat _t[],Eigen::Quaterniond q[],int num){
 
-	 	visualization_msgs::Marker pts_array;//, cam_1, cam_2;
+void r2q( cv::Mat _R[] ,Eigen::Quaterniond q[], int num ){
+
+    Eigen::Matrix3d R_eigen;
+    for(int i=0;i<num;i++){
+        cv::cv2eigen(_R[i],R_eigen);
+        q[i]=R_eigen;
+        q[i].normalize();
+//        std::cout << "Quaternion"<<i<<": "<< std::endl << "w: "<<q[i].w()<<std::endl<< std::endl<<q[i].vec() << std::endl;
+    }
+}
+
+void invertpose(const cv::Mat R[], const cv::Mat t[],cv:: Mat _R[], cv::Mat _t[], int num) {
+    for(int i = 0;i<num;i++){
+        // Obtain inverse:
+        _R[i] = R[i].inv();
+        _t[i] = -1 * _R[i] * t[i];
+//	    std::cout << "Rotation Matrix"<<i<< ": " << std::endl <<" "<< R[i]<<std::endl;
+//	    std::cout << "__Rotation Matrix"<<i<< ": " << std::endl <<" "<< _R[i]<<std::endl;
+//	    std::cout << "Translation"<<i<< ": " << std::endl<<" "<<t[i]<<std::endl;
+//	    std::cout << "__Translation"<<i<< ": " << std::endl<<" "<<_t[i]<<std::endl;
+    }
+
+}
+
+
+void viz(cv::Mat points3D,ros::Publisher& pub_pts,ros::Publisher& pub_cam,const cv::Mat t[], const cv::Mat R[], Eigen::Quaterniond q[],int num){
+
+        cv::Mat _R[num],_t[num]; 			// rotation matrices, cam translations
+        invertpose(R,t,_R,_t, num);
+        r2q(_R,q, num);
+
+	 	visualization_msgs::Marker pts_array;  // cam_1, cam_2;
 
         pts_array.header.frame_id = "/world_frame";
         /////////////////////////////////////////////////////////////////////////////

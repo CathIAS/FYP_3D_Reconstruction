@@ -23,35 +23,33 @@ using namespace Eigen;
 
 int main(int argc, char** argv)
 {
+ 
     /* initiate ros node and publisher */
-
     ros::init(argc, argv, "Reconstruction");
     ros::NodeHandle nh;
     ros::Publisher pub_pts = nh.advertise<visualization_msgs::Marker>("recon_pts", 500);
     ros::Publisher pub_cam = nh.advertise<visualization_msgs::Marker>("recon_cam", 10);
 
-    /* Variables */
 
+    /* Image variables */
     Mat img[N];  								// original images
     Mat img_undist[N];  						// undistorted images
     projMatr0 = camIntrinsic * Rt_init;
 
-    //    /* --------------------- Specifies executable usage --------------------- */
-    //    if(argc != 3)
-    //    {
-    //        cout << "Usage: ./fyp_3d_reconstruction <mode> [directory]" << endl;
-    //        cout << "       <mode> : images" << endl;
-    //        cout << "       [directory] : path to image folder. Do NOT add '/' at the end.
-    //    						Folder should only contain image files" << endl;
-    //        return -1;
-    //    }
 
+//    /* --------------------- Specifies executable usage --------------------- */
+//    if(argc != 3)
+//    {
+//        cout << "Usage: ./fyp_3d_reconstruction <mode> [directory]" << endl;
+//        cout << "       <mode> : images" << endl;
+//        cout << "       [directory] : path to image folder. Do NOT add '/' at the end.
+//    						Folder should only contain image files" << endl;
+//        return -1;
+//    }
 
-    /* ------------ In "images" mode - reading images from folder ----------- */
-
-    //    if (strcmp(argv[1], "images") == 0)  // if argv[1] is "images"
-    //    {
-    //        cout << "Mode selected: images" << endl;
+//    /* ------------ In "images" mode - reading images from folder ----------- */
+//    if (strcmp(argv[1], "images") == 0)  // if argv[1] is "images"
+//        cout << "Mode selected: images" << endl;
 
 
     /* Get folder path */ 
@@ -63,20 +61,20 @@ int main(int argc, char** argv)
     readInImages(img, folder, m);
     /* Show Image size */
     cout << "Picture Height: " << img[0].rows << endl << "Picture Width: " << img[0].cols << endl;
-    //    }   
 
 
     /* Variables */
-    vector<KeyPoint> keypoints[m];
-    vector< DMatch > good_matches[m-1];  				// matches for drawing
-    vector< Point2f > points[m-1], pointsCompare[m-1],mask3D[m];  	// coordinates of matched points
-    Mat img_matches[m-1];  								// img with matches for display
+    Mat R[m],t[m]; 								    // rotation matrices, cam translations
+    Quaterniond q[m]; 								// orientation quaternions
+    
+    vector<KeyPoint> keypoints[m];                  // SURF feature points
+    vector< DMatch > good_matches[m-1];  			// matching index
+    vector< Point2f > points[m-1], pointsCompare[m-1],mask3D[m];  	// coordinates of matched points, and mask3D showing relation between landmarks and cameras
+    Mat img_matches[m-1];  							// img with matches for display
+    n_matches = new int[m-1];
+    
     Mat E;  										// essential matrix
     Mat mask; 										// mask for inliers after RANSAC
-    Mat R[m],_R[m],t[m],_t[m]; 								// rotation matrices, cam translations
-    Quaterniond q[m]; 								// orientation quaternions
-    n_matches = new int[m-1];
-    mid = m/2;
 
     R[0]=(Mat_<float>(3,3) << 1,0,0,0,1,0,0,0,1);
     t[0]=(Mat_<float>(3,1) << 0,0,0);
@@ -88,7 +86,7 @@ int main(int argc, char** argv)
     undistort(img, img_undist, camIntrinsic, dist);
 
     /* SURF detector for features and matching*/
-    surf(img_undist, good_matches,keypoints, points, pointsCompare, 3000, img_matches);
+    surf(img_undist, good_matches,keypoints, points, pointsCompare, 4000, img_matches);
 
     /* find essential matrix using five-point algorithm with RANSAC */
     E= findEssentialMat(points[0], pointsCompare[0], camIntrinsic, RANSAC, 0.999, 1.0, mask);
@@ -105,72 +103,60 @@ int main(int argc, char** argv)
     		pointsComparex.push_back(pointsCompare[0][i]);
     	}
     }
-    std::cout<<"first 2 images mask result: "<<points[0].size()<<"	"<<pointsx.size()<<std::endl;
-
-
-    /* draw RANSAC inliers in red */
-/*        for (int i=0; i<(m-1);i++){
-            for (int j=0; j<n_matches[i];j++){
-                if (mask.at<uchar>(j,0) != 0)
-                    circle(img_matches[i], points[i][j], 10, Scalar(0,0,255), 3);
-            }
-        }
-*/
-
-
+    std::cout<<"first 2 images mask result: "<<points[0].size()<<" -> "<<pointsx.size()<<std::endl;
 
 
     /* Triangulation */
     Mat points4D;   // homogeneous point world coordinates
-    //@brief Reconstructs points by triangulation.
-    //Keep in mind that all input data should be of float type in order for this function to work.
-
     triangulate_init(R[1],t[1],pointsx,pointsComparex,points4D,mask3D);
 
     // 4d to 3d
     Mat points3D(3,points4D.cols,CV_32F);
-    for (int i=0; i<points4D.cols; i++)
-    {
+    for (int i=0; i<points4D.cols; i++) {
     	float x = points4D.at<float>(3,i);
         points3D.at<float>(0,i) = points4D.at<float>(0,i) / x;
         points3D.at<float>(1,i) = points4D.at<float>(1,i) / x;
         points3D.at<float>(2,i) = points4D.at<float>(2,i) / x;
-   }
+    }
+    n = points3D.cols;
 
-    std::cout<<"number of 3D points by first 2 images: "<<points3D.cols<<std::endl;
+    // visualize two-view results
+    viz(points3D,pub_pts,pub_cam,t,R,q,2);
+
+    std::cout<<"number of 3D points by first 2 images: "<<n<<std::endl;
     std::cout<< "-------------------------------" << std::endl;
 
-    /* ---------------------------------------------------------------------------------------*/
 
+    /* multiple views and BA */
+    for (int i=2; i<m-1;i++)
+    {
+        // get R and t of the newest cam
+        PnP(good_matches,i,keypoints,R,t,points,pointsCompare,mask3D,img_matches[i-1]);
+        std::cout<< "-------------------------------" << std::endl;
+        // take deducted matches and triangulate
+        add_Points(R,t,points,pointsCompare,points3D,i,mask3D,img_matches[i-1]);
+        // visualize front-end
+        viz(points3D,pub_pts,pub_cam,t,R,q,i+1);
+        // BA
+        bundle(R, t, points3D, mask3D, i+1, n, 4);
+        // visualize back-end
+        viz(points3D,pub_pts,pub_cam,t,R,q,i+1);
+    }
 
     // get R and t of the newest cam
-    PnP(good_matches,2,keypoints,R,t,points,pointsCompare,mask3D,img_matches[1]);
+    PnP(good_matches,m-1,keypoints,R,t,points,pointsCompare,mask3D,img_matches[m-2]);
     std::cout<< "-------------------------------" << std::endl;
     // take deducted matches and triangulate
-    add_Points(R,t,points,pointsCompare,points3D,2,mask3D,img_matches[1]);
-    std::cout<<"number of 3D points after 3 cam: "<<points3D.cols<<std::endl;
-
-
-    // get R and t of the newest cam
-    PnP(good_matches,3,keypoints,R,t,points,pointsCompare,mask3D,img_matches[2]);
-    std::cout<< "-------------------------------" << std::endl;
-    // take deducted matches and triangulate
-    add_Points(R,t,points,pointsCompare,points3D,3,mask3D,img_matches[2]);
-    std::cout<<"number of 3D points after 4 cam: "<<points3D.cols<<std::endl;
-
-    /* ------------------- FOR BUNDLE ADJUSTMENT TEST -------------------- */
-
-/*
-    Mat RM[m_cam], TV[m_cam];  // camera R, T relative to the first cam
-    RM[0] = R[0];      // first cam serve as the world frame
-    RM[1] = R_21;
-    TV[0] = t[0];
-    TV[1] = t_21;
-*/
-
-    int n_pts = points3D.cols;
-
-    bundle(R, t, points3D, mask3D, m, n_pts);
+    add_Points(R,t,points,pointsCompare,points3D,m-1,mask3D,img_matches[m-2]);
+    // visualize front-end
+    viz(points3D,pub_pts,pub_cam,t,R,q,m);
+    // BA
+    bundle(R, t, points3D, mask3D, m, n, 8);
+    
+    // finalize visualization
+    while (ros::ok()){
+        viz(points3D,pub_pts,pub_cam,t,R,q,m);
+    }
 
     
     /* ----------------------- Simulation ----------------------------*/
@@ -302,15 +288,11 @@ int main(int argc, char** argv)
     Rs[2] = Rs[2] * R_e;
     
     bundle(Rs, ts, pts3Ds, vecs, m_cams, n_ptss);
-*/
     
-    /* ----------------------- Visualization with RViz --------------------------*/
-    invertpose(R,t,_R,_t);
-    /* transform rotation matrix to quaternion */
-    r2q(_R,q);
     while (ros::ok()){
-        viz(points3D,pub_pts,pub_cam,_t,q,m);
+        viz(points3D,pub_pts,pub_cam,t,R,q,m);
     }
+*/ 
 
     delete n_matches;
     return 0;

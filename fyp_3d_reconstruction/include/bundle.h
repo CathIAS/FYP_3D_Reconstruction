@@ -51,13 +51,13 @@ void updateError( const std::vector< std::vector<cv::Point2f> >& z, const std::v
 void getJacobian( const std::vector< std::vector<cv::Point2f> >& z, const Eigen::Matrix3f Rot[], const Eigen::Vector3f Tra[], const Eigen::Vector3f P3[], int m_cam, int n_pts, Eigen::MatrixXf& J);
 
 // form Jacobian and Hessian by block insertion
-void getJnH( const std::vector< std::vector<cv::Point2f> >& z, const Eigen::Matrix3f Rot[], const Eigen::Vector3f Tra[], const Eigen::Vector3f P3[], int m_cam, int n_pts, Eigen::SparseMatrix<float>& J, Eigen::SparseMatrix<float>& H);
+void getJnH( const std::vector< std::vector<cv::Point2f> >& z, const Eigen::Matrix3f Rot[], const Eigen::Vector3f Tra[], const Eigen::Vector3f P3[], int m_cam, int n_pts, Eigen::SparseMatrix<float>& J, Eigen::SparseMatrix<float>& H, const Eigen::VectorXf& err);
 
 // increment delta x to all the variables
 void increX( const Eigen::VectorXf& del_x, Eigen::Vector3f Theta[], Eigen::Matrix3f Rot[], Eigen::Vector3f Tra[], Eigen::Vector3f P3[], int m_cam, int n_pts);
 
 // Bundle Adjustment main function
-void bundle(cv::Mat R[], cv::Mat T[], cv::Mat& points3D, const std::vector<cv::Point2f> mask3D[], int m_cam, int n_pts);
+void bundle(cv::Mat R[], cv::Mat T[], cv::Mat& points3D, const std::vector<cv::Point2f> mask3D[], int m_cam, int n_pts, int it);
 
 // Cam - K: camera matrix, R[]: rotation matrices, T[]: translations
 // Points - points3D (vector)

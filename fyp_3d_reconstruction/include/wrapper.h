@@ -20,9 +20,6 @@
 
 void undistort(const cv::Mat img[], cv::Mat img_undist[], const cv::Mat cameraMatrix, const cv::Mat distCoeffs);
 
-
-void r2q(cv::Mat R[],Eigen::Quaterniond q[]);
-
 void triangulate_init(cv::Mat R, cv::Mat t,const std::vector< cv::Point2f > points_1,
 						const std::vector< cv::Point2f > points_2,cv::Mat& points4D,std::vector< cv::Point2f > mask3D[]);
 
@@ -31,7 +28,5 @@ void add_Points( cv::Mat R[], cv::Mat t[],const std::vector< cv::Point2f > point
 
 void PnP(const std::vector< cv::DMatch > good_matches[],const int q,const std::vector<cv::KeyPoint> keypoints[], cv::Mat R[],
 		cv::Mat t[],std::vector< cv::Point2f > points_1[], std::vector< cv::Point2f > points_2[],std::vector< cv::Point2f > mask3D[],cv::Mat& img_matches);
-
-void invertpose(const cv::Mat R[],cv::Mat t[],cv:: Mat _R[], cv::Mat _t[] );
 
 #endif /* FYP_3D_RECONSTRUCTION_INCLUDE_WRAPPER_H_ */
