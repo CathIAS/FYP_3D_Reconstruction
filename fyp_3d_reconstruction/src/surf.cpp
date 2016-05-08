@@ -56,7 +56,7 @@ void surf(const Mat img_undist[],vector< DMatch > good_matches,vector< Point2f >
 
     //only "good" matches
     for( int i = 0; i < descriptors_1.rows; i++ ){ 
-        if( matches[i].distance <= max(3*min_dist, 0.03) )
+        if( matches[i].distance <= max(6*min_dist, 0.03) )
         { good_matches.push_back( matches[i]); }
     }
 
@@ -137,7 +137,7 @@ void findgoodmatches(std::vector< DMatch >& match,std::vector< DMatch >& good_ma
 
     //only "good" matches
     for( int i = 0; i < match.size(); i++ ){
-        if( match[i].distance <= max(4*min_dist, 0.02) ){
+        if( match[i].distance <= max(3.5*min_dist, 0.02) ){
             good_matches.push_back( match[i]);
         }
     }

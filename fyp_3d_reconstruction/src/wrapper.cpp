@@ -41,7 +41,7 @@ void add_Points( cv::Mat R[],cv::Mat t[],const std::vector< cv::Point2f > points
 
     // obtain mask on new matches by two-view constraint
     cv::Mat mask;
-    findEssentialMat(points_1[add-1], points_2[add-1], camIntrinsic, cv::RANSAC, 0.999, 0.5, mask);
+    findEssentialMat(points_1[add-1], points_2[add-1], camIntrinsic, cv::RANSAC, 0.999, 0.25, mask);
     std::vector< cv::Point2f > pointsx,pointsComparex;
     for(int i=0;i<points_1[add-1].size();i++){
         if (mask.at<uchar>(i,0) != 0){
@@ -59,9 +59,9 @@ void add_Points( cv::Mat R[],cv::Mat t[],const std::vector< cv::Point2f > points
         else
             circle(img_matches, points_1[add-1][j], 10, cv::Scalar(255,0,0), 3);
     }
-//    cv::namedWindow("Matches", CV_WINDOW_NORMAL);
-//    cv::imshow("Matches", img_matches);
-//    cv::waitKey();
+    cv::namedWindow("Matches", CV_WINDOW_NORMAL);
+    cv::imshow("Matches", img_matches);
+    cv::waitKey();
        
     // form projection matrix of the 2nd last camera
     cv::Mat projMatr1(3,4,CV_32F);
@@ -95,8 +95,8 @@ void add_Points( cv::Mat R[],cv::Mat t[],const std::vector< cv::Point2f > points
                 mask3D[j].push_back(x);
         }
     }
-    cv::Mat points3Dtemp(3,pointsx.size(),CV_32F);
 
+    cv::Mat points3Dtemp(3,pointsx.size(),CV_32F);
     for (int i=0; i<pointsx.size(); i++)
     {
         float x = points4Dtemp.at<float>(3,i);
@@ -255,7 +255,7 @@ void PnP(const std::vector< cv::DMatch > good_matches[],const int add,const std:
 
     cv::Mat Rv;
     cv::Mat inlier;
-    solvePnPRansac(points3Dtemp,points3,camIntrinsic,dist,Rv,t[add],false,100,8,0.99,inlier,CV_ITERATIVE);
+    solvePnPRansac(points3Dtemp,points3,camIntrinsic,dist,Rv,t[add],false,3,5,0.99,inlier,CV_ITERATIVE);
     int n_inl = countNonZero(inlier);
     std::cout<<"number of inliers in PnP: "<<n_inl<<std::endl;
 

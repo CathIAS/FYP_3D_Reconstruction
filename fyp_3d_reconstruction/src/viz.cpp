@@ -85,14 +85,14 @@ void viz(cv::Mat points3D,ros::Publisher& pub_pts,ros::Publisher& pub_cam,const 
         //cam_1.type = visualization_msgs::Marker::ARROW;
         //cam_2.type = visualization_msgs::Marker::ARROW;
         /////////////////////////////////////////////////////////////////
-        pts_array.scale.x = 0.015;
-        pts_array.scale.y = 0.015;
-        pts_array.scale.z = 0.015;
+        pts_array.scale.x = 0.04;
+        pts_array.scale.y = 0.04;
+        pts_array.scale.z = 0.04;
 
         for(int i = 0;i<num;i++){
-        	cam[i].scale.x = 0.1;
-        	cam[i].scale.y = 0.1;
-        	cam[i].scale.z = 0.1;
+        	cam[i].scale.x = 0.2;
+        	cam[i].scale.y = 0.2;
+        	cam[i].scale.z = 0.2;
         }
         //cam_1.scale.x = 0.1;
         //cam_1.scale.y = 0.1;

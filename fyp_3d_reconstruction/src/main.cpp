@@ -54,6 +54,7 @@ int main(int argc, char** argv)
 
     /* Get folder path */ 
     const string folder = "/home/liuwx/git/FYP_3D_Reconstruction/photos/test-4";
+    //const string folder = "/home/liuwx/git/FYP_3D_Reconstruction/photos/new_recons";
     //const string folder = "/home/xsunaf/FYP/FYP_3D_Reconstruction/photos/test-4";
     cout << "Folder path: " << folder << endl;
 

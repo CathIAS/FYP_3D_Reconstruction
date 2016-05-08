@@ -299,7 +299,7 @@ void getJnH( const std::vector< std::vector<cv::Point2f> >& z, const Matrix3f Ro
           Jx = cal_Jx(Rot[k],Tra[k],P3[j]);
           Jc << Jr, Jt;
 
-          float thresh = 1e-6;
+          float thresh = 1e-4;
 
           w(1,0) = 0;
           w(0,1) = 0;
@@ -666,7 +666,8 @@ void bundle(cv::Mat R[], cv::Mat T[], cv::Mat& points3D, const std::vector<cv::P
     cout << "Percentage of error deducted in "<< it << " loops: " << err_ded << endl;
 
     // Transform variables from Eigen to Mat/vectors
-    toCV(R, T, theta, pts3, Rot, Theta, Tra, P3, m_cam, n_pts);
+    if (err_ded > -0.5 && err_ded <= 1)
+        toCV(R, T, theta, pts3, Rot, Theta, Tra, P3, m_cam, n_pts);
     
     // Return points3D
     for (int j=0;j<n_pts;j++) {
